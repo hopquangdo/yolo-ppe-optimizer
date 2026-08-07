@@ -27,6 +27,7 @@ from torch import nn, optim
 from ultralytics import __version__
 from ultralytics.cfg import get_cfg, get_save_dir
 from ultralytics.data.utils import check_cls_dataset, check_det_dataset, convert_ndjson_to_yolo_if_needed
+from ultralytics.utils.prune_utils import build_ignore_bn_set
 from ultralytics.nn.tasks import load_checkpoint
 from ultralytics.optim import MuSGD
 from ultralytics.utils import (
@@ -124,6 +125,8 @@ class BaseTrainer:
         """
         self.hub_session = overrides.pop("session", None)  # HUB
         self.args = get_cfg(cfg, overrides)
+        self.finetune = self.args.finetune
+        self.sr = float(getattr(self.args, "sr", 0.0))
         self.check_resume(overrides)
         self.device = select_device(self.args.device)
         # Update "-1" devices so post-training val does not repeat search
@@ -297,6 +300,30 @@ class BaseTrainer:
         self.model = self.model.to(self.device)
         self.set_model_attributes()
 
+        self.sr = float(getattr(self, "sr", getattr(self.args, "sr", 0.0)))
+        if self.sr:
+            self.args.amp = False
+            # Ultralytics warmup uses min 100 iterations; small datasets never reach full lr in early epochs.
+            if self.args.warmup_epochs > 0:
+                self.args.warmup_epochs = 0.0
+                LOGGER.info(
+                    colorstr("yellow", "warmup_epochs=0 for sparsity training (BN gamma needs full lr from epoch 1).")
+                )
+            # One optimizer step per batch on small datasets so BN gamma updates are visible early.
+            self.args.nbs = self.args.batch
+            LOGGER.info(colorstr("yellow", f"nbs={self.args.nbs} -> accumulate=1 for sparsity training."))
+        LOGGER.info(f"sr: {self.sr}")
+        if self.sr > 0.0:
+            LOGGER.info(colorstr("yellow", f"Sparsity Training Mode Activated! (sr={self.sr:.5f})"))
+            LOGGER.info(
+                colorstr(
+                    "yellow",
+                    "AMP scaler disabled; L1 grad = sr*sign(gamma) added after backward (gradient-level sparsity).",
+                )
+            )
+        else:
+            LOGGER.info(colorstr("green", f"Standard Training Mode. (sr={self.sr})"))
+
         # Compile model
         self.model = attempt_compile(self.model, device=self.device, mode=self.args.compile)
 
@@ -456,7 +483,33 @@ class BaseTrainer:
                         )
 
                     # Backward
-                    self.scaler.scale(self.loss).backward()
+                    if self.sr > 0.0:
+                        self.loss.backward()
+                        # L1 sparsity on BN gamma: add sr*sign(gamma) directly to grad
+                        # (gradient-level, not loss-level). This gives a constant per-step
+                        # shrinkage under plain SGD (build_optimizer forces SGD when sr>0,
+                        # see below) — it is NOT immune to Adam-family second-moment
+                        # normalization, so don't pair this with Adam/AdamW/etc: the injected
+                        # term gets rescaled by that optimizer same as any other gradient,
+                        # breaking the linear sr -> decay-speed relationship.
+                        #
+                        # sr itself decays linearly over training (srtmp = sr*(1-0.9*epoch/epochs),
+                        # matching JasonSloan/yolov8-prune's train-sparsity.py): a constant sr
+                        # keeps piling on L1 pressure every step with nothing easing it off, which
+                        # is what drove val mAP to collapse by epoch 4 in our own constant-sr runs.
+                        # Decaying it lets the network stabilize on the surviving channels in the
+                        # back half of training instead of being squeezed the whole time.
+                        srtmp = self.sr * (1 - 0.9 * self.epoch / self.epochs)
+                        model_u = unwrap_model(self.model)
+                        if not hasattr(self, "_ignore_bn_set"):
+                            self._ignore_bn_set = build_ignore_bn_set(model_u)
+                        ignore_bn_set = self._ignore_bn_set
+                        for k, m in model_u.named_modules():
+                            if isinstance(m, nn.BatchNorm2d) and (k not in ignore_bn_set):
+                                if m.weight.grad is not None:
+                                    m.weight.grad.data.add_(srtmp * torch.sign(m.weight.data))
+                    else:
+                        self.scaler.scale(self.loss).backward()
                 except torch.cuda.OutOfMemoryError:
                     if epoch > self.start_epoch or self._oom_retries >= 3 or RANK != -1:
                         raise  # only auto-reduce during first epoch on single GPU, max 3 retries
@@ -643,10 +696,20 @@ class BaseTrainer:
         """Save model training checkpoints with additional metadata."""
         import io
 
-        ema = deepcopy(unwrap_model(self.ema.ema)).half()
-        if not all(torch.isfinite(v).all() for v in ema.state_dict().values() if isinstance(v, torch.Tensor)):
-            LOGGER.warning(f"Skipping checkpoint save at epoch {self.epoch}: EMA contains NaN/Inf")
-            return False
+        # Sparsity training: save live weights (sparse BN gamma), not EMA-smoothed weights.
+        if self.sr > 0.0:
+            model_ckpt = deepcopy(unwrap_model(self.model)).half()
+            if not all(torch.isfinite(v).all() for v in model_ckpt.state_dict().values() if isinstance(v, torch.Tensor)):
+                LOGGER.warning(f"Skipping checkpoint save at epoch {self.epoch}: model contains NaN/Inf")
+                return False
+            ema = None
+            model_save = model_ckpt
+        else:
+            ema = deepcopy(unwrap_model(self.ema.ema)).half()
+            if not all(torch.isfinite(v).all() for v in ema.state_dict().values() if isinstance(v, torch.Tensor)):
+                LOGGER.warning(f"Skipping checkpoint save at epoch {self.epoch}: EMA contains NaN/Inf")
+                return False
+            model_save = None
 
         # Serialize ckpt to a byte buffer once (faster than repeated torch.save() calls)
         buffer = io.BytesIO()
@@ -654,7 +717,7 @@ class BaseTrainer:
             {
                 "epoch": self.epoch,
                 "best_fitness": self.best_fitness,
-                "model": None,  # resume and final checkpoints derive from EMA
+                "model": model_save,
                 "ema": ema,
                 "updates": self.ema.updates,
                 "optimizer": convert_optimizer_state_dict_to_fp16(deepcopy(self.optimizer.state_dict())),
@@ -740,12 +803,17 @@ class BaseTrainer:
 
     def optimizer_step(self):
         """Perform a single step of the training optimizer with gradient clipping and EMA update."""
-        self.scaler.unscale_(self.optimizer)  # unscale gradients
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=10.0)
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
-        self.optimizer.zero_grad()
-        if self.ema:
+        if self.sr > 0.0:
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=10.0)
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+        else:
+            self.scaler.unscale_(self.optimizer)  # unscale gradients
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=10.0)
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+            self.optimizer.zero_grad()
+        if self.ema and self.sr <= 0.0:
             self.ema.update(self.model)
 
     def preprocess_batch(self, batch):
@@ -872,6 +940,7 @@ class BaseTrainer:
 
                 resume = True
                 self.args = get_cfg(ckpt_args)
+                self.sr = getattr(self.args, "sr", 0.0)
                 self.args.model = self.args.resume = str(last)  # reinstate model
                 for k in (
                     "imgsz",
@@ -1004,15 +1073,30 @@ class BaseTrainer:
         g = [{}, {}, {}, {}]  # optimizer parameter groups
         bn = tuple(v for k, v in nn.__dict__.items() if "Norm" in k)  # normalization layers, i.e. BatchNorm2d()
         if name == "auto":
-            LOGGER.info(
-                f"{colorstr('optimizer:')} 'optimizer=auto' found, "
-                f"ignoring 'lr0={self.args.lr0}' and 'momentum={self.args.momentum}' and "
-                f"determining best 'optimizer', 'lr0' and 'momentum' automatically... "
-            )
-            nc = self.data.get("nc", 10)  # number of classes
-            lr_fit = round(0.002 * 5 / (4 + nc), 6)  # lr0 fit equation to 6 decimal places
-            name, lr, momentum = ("MuSGD", 0.01, 0.9) if iterations > 10000 else ("AdamW", lr_fit, 0.9)
-            self.args.warmup_bias_lr = 0.0  # no higher than 0.01 for Adam
+            sr = float(getattr(self.args, "sr", 0) or 0)
+            if sr > 0:
+                # Network Slimming's gradient-level L1 trick (grad += sr*sign(gamma)) assumes
+                # plain SGD, where it translates to a constant per-step shrinkage of lr*sr.
+                # AdamW normalizes every gradient component (including this injected term) by
+                # that parameter's own sqrt(second-moment) — it is NOT "immune" to that
+                # normalization, so with AdamW the effective decay speed stops scaling
+                # linearly with sr (verified: 10x smaller sr only slowed decay ~4-5x, not
+                # 10x). Use SGD here to match the technique's original design.
+                name, lr, momentum = "SGD", float(self.args.lr0), float(self.args.momentum)
+                LOGGER.info(
+                    f"{colorstr('optimizer:')} sparsity (sr={sr}) -> SGD(lr={lr}, momentum={momentum}) "
+                    f"using lr0/momentum from args."
+                )
+            else:
+                LOGGER.info(
+                    f"{colorstr('optimizer:')} 'optimizer=auto' found, "
+                    f"ignoring 'lr0={self.args.lr0}' and 'momentum={self.args.momentum}' and "
+                    f"determining best 'optimizer', 'lr0' and 'momentum' automatically... "
+                )
+                nc = self.data.get("nc", 10)  # number of classes
+                lr_fit = round(0.002 * 5 / (4 + nc), 6)  # lr0 fit equation to 6 decimal places
+                name, lr, momentum = ("MuSGD", 0.01, 0.9) if iterations > 10000 else ("AdamW", lr_fit, 0.9)
+                self.args.warmup_bias_lr = 0.0  # no higher than 0.01 for Adam
 
         use_muon = name == "MuSGD"
         for module_name, module in unwrap_model(model).named_modules():

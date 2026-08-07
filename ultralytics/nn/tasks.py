@@ -1614,7 +1614,12 @@ def load_checkpoint(weight, device=None, inplace=True, fuse=False):
         weight = check_file(weight, download_dir=SETTINGS["weights_dir"])
     ckpt, weight = torch_safe_load(weight)  # load ckpt
     args = {**DEFAULT_CFG_DICT, **(ckpt.get("train_args", {}))}  # combine model and default args, preferring model args
-    model = (ckpt.get("ema") or ckpt["model"]).float()  # FP32 model
+    train_args = ckpt.get("train_args", {}) or {}
+    sr = float(train_args.get("sr", 0) or 0)
+    if sr > 0 and ckpt.get("model") is not None:
+        model = ckpt["model"].float()  # sparsity checkpoints store live (sparse) weights in model
+    else:
+        model = (ckpt.get("ema") or ckpt["model"]).float()  # FP32 model
 
     # Model compatibility updates
     model.args = args  # attach args to model
@@ -1920,7 +1925,7 @@ def guess_model_task(model):
                 return "pose"
             elif isinstance(m, OBB):
                 return "obb"
-            elif isinstance(m, (Detect, WorldDetect, YOLOEDetect, v10Detect)):
+            elif isinstance(m, (Detect, WorldDetect, YOLOEDetect, v10Detect)) or m.__class__.__name__ == "DetectPruned":
                 return "detect"
 
     # Guess from model filename

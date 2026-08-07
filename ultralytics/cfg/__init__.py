@@ -183,6 +183,7 @@ CFG_FLOAT_KEYS = frozenset(
         "time",
         "workspace",
         "batch",
+        "sr",
     }
 )
 CFG_FRACTION_KEYS = frozenset(
@@ -251,6 +252,7 @@ CFG_BOOL_KEYS = frozenset(
         "show_conf",
         "visualize",
         "augment",
+        "finetune",
         "agnostic_nms",
         "retina_masks",
         "show_boxes",

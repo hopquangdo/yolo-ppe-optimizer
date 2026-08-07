@@ -156,7 +156,11 @@ class BaseValidator:
             self.data = trainer.data
             # Force FP16 val during training
             self.args.half = self.device.type != "cpu" and trainer.amp
-            model = trainer.ema.ema or trainer.model
+            # Sparsity training: validate live model (sparse BN gamma), not EMA-smoothed weights.
+            if getattr(trainer, "sr", 0) > 0:
+                model = unwrap_model(trainer.model)
+            else:
+                model = trainer.ema.ema or trainer.model
             if trainer.args.compile and hasattr(model, "_orig_mod"):
                 model = model._orig_mod  # validate non-compiled original model to avoid issues
             model = model.half() if self.args.half else model.float()

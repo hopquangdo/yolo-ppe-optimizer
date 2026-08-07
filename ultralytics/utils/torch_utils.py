@@ -741,8 +741,8 @@ def strip_optimizer(f: str | Path = "best.pt", s: str = "", updates: dict[str, A
         "docs": "https://docs.ultralytics.com",
     }
 
-    # Update model
-    if x.get("ema"):
+    # Update model (sparsity checkpoints already store live weights in model)
+    if x.get("model") is None and x.get("ema"):
         x["model"] = x["ema"]  # replace model with EMA
     if hasattr(x["model"], "args"):
         x["model"].args = dict(x["model"].args)  # convert from IterableSimpleNamespace to dict

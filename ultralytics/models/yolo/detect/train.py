@@ -15,6 +15,7 @@ from ultralytics.data import build_dataloader, build_yolo_dataset
 from ultralytics.engine.trainer import BaseTrainer
 from ultralytics.models import yolo
 from ultralytics.nn.tasks import DetectionModel
+from ultralytics.nn.tasks_pruned import DetectionModelPruned
 from ultralytics.utils import DEFAULT_CFG, LOGGER, RANK
 from ultralytics.utils.patches import override_configs
 from ultralytics.utils.plotting import plot_images, plot_labels
@@ -167,20 +168,33 @@ class DetectionTrainer(BaseTrainer):
         self.model.class_weights = torch.from_numpy(weights).to(self.device)
         LOGGER.info(f"Class weights: {self.model.class_weights.cpu().numpy().round(3)}")
 
-    def get_model(self, cfg: str | None = None, weights: str | None = None, verbose: bool = True):
+    def get_model(self, cfg: str | None = None, weights: str | None = None, verbose: bool = True, maskbndict=None):
         """Return a YOLO detection model.
 
         Args:
             cfg (str, optional): Path to model configuration file.
             weights (str, optional): Path to model weights.
             verbose (bool): Whether to display model information.
+            maskbndict (dict, optional): BN masks for pruned-model finetuning.
 
         Returns:
             (DetectionModel): YOLO detection model.
         """
-        model = DetectionModel(cfg, nc=self.data["nc"], ch=self.data["channels"], verbose=verbose and RANK == -1)
-        if weights:
-            model.load(weights)
+        if self.finetune:
+            assert maskbndict is not None, "maskbndict must be stored in weights so that it can be loaded for finetuning"
+            model = DetectionModelPruned(maskbndict, cfg, nc=self.data["nc"], verbose=verbose and RANK == -1)
+            if weights:
+                model.load(weights)
+                # Re-init detect head biases after load (sparse/pruned cls biases are often near-zero → no detections).
+                from ultralytics.nn.modules.head_pruned import DetectPruned
+
+                head = model.model[-1]
+                if isinstance(head, DetectPruned):
+                    head.bias_init()
+        else:
+            model = DetectionModel(cfg, nc=self.data["nc"], ch=self.data["channels"], verbose=verbose and RANK == -1)
+            if weights:
+                model.load(weights)
         return model
 
     def get_validator(self):

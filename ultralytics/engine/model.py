@@ -786,7 +786,10 @@ class Model(torch.nn.Module):
             weights = None if pretrained is False else self.model
             if isinstance(pretrained, (str, Path)):
                 weights, _ = load_checkpoint(pretrained)
-            self.trainer.model = self.trainer.get_model(weights=weights, cfg=self.model.yaml)
+            maskbndict = self.ckpt.get("maskbndict", None) if self.ckpt else None
+            self.trainer.model = self.trainer.get_model(
+                weights=weights, cfg=self.model.yaml, maskbndict=maskbndict
+            )
             self.model = self.trainer.model
 
         self.trainer.train()
