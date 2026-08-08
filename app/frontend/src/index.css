@@ -1,0 +1,16 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100svh;
+  margin: 0;
+  text-align: left;
+  box-sizing: border-box;
+}
