@@ -1,274 +1,265 @@
 <div align="center">
-  <p>
-    <a href="https://platform.ultralytics.com/?utm_source=github&utm_medium=referral&utm_campaign=platform_launch&utm_content=banner&utm_term=ultralytics_github" target="_blank">
-      <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/banner-yolov8.png" alt="Ultralytics YOLO banner"></a>
-  </p>
 
-[中文](https://docs.ultralytics.com/zh) | [한국어](https://docs.ultralytics.com/ko) | [日本語](https://docs.ultralytics.com/ja) | [Русский](https://docs.ultralytics.com/ru) | [Deutsch](https://docs.ultralytics.com/de) | [Français](https://docs.ultralytics.com/fr) | [Español](https://docs.ultralytics.com/es) | [Português](https://docs.ultralytics.com/pt) | [Türkçe](https://docs.ultralytics.com/tr) | [Tiếng Việt](https://docs.ultralytics.com/vi) | [العربية](https://docs.ultralytics.com/ar) <br>
+# PPE-YOLO26-Edge
 
-<div>
-    <a href="https://github.com/ultralytics/ultralytics/actions/workflows/ci.yml"><img src="https://github.com/ultralytics/ultralytics/actions/workflows/ci.yml/badge.svg" alt="Ultralytics CI"></a>
-    <a href="https://clickpy.clickhouse.com/dashboard/ultralytics"><img src="https://static.pepy.tech/badge/ultralytics" alt="Ultralytics Downloads"></a>
-    <a href="https://discord.com/invite/ultralytics"><img alt="Ultralytics Discord" src="https://img.shields.io/discord/1089800235347353640?logo=discord&logoColor=white&label=Discord&color=blue"></a>
-    <a href="https://community.ultralytics.com/"><img alt="Ultralytics Forums" src="https://img.shields.io/discourse/users?server=https%3A%2F%2Fcommunity.ultralytics.com&logo=discourse&label=Forums&color=blue"></a>
-    <a href="https://www.reddit.com/r/ultralytics/"><img alt="Ultralytics Reddit" src="https://img.shields.io/reddit/subreddit-subscribers/ultralytics?style=flat&logo=reddit&logoColor=white&label=Reddit&color=blue"></a>
-    <br>
-    <a href="https://console.paperspace.com/github/ultralytics/ultralytics"><img src="https://assets.paperspace.io/img/gradient-badge.svg" alt="Run Ultralytics on Gradient"></a>
-    <a href="https://colab.research.google.com/github/ultralytics/ultralytics/blob/main/examples/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open Ultralytics In Colab"></a>
-    <a href="https://www.kaggle.com/models/ultralytics/yolo26"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open Ultralytics In Kaggle"></a>
-    <a href="https://mybinder.org/v2/gh/ultralytics/ultralytics/HEAD?labpath=examples%2Ftutorial.ipynb"><img src="https://mybinder.org/badge_logo.svg" alt="Open Ultralytics In Binder"></a>
-</div>
-</div>
-<br>
+**Optimization & Compression Pipeline for Real-Time PPE Detection on Edge Devices**
 
-[Ultralytics](https://www.ultralytics.com/) creates cutting-edge, state-of-the-art (SOTA) [YOLO models](https://www.ultralytics.com/yolo) built on years of foundational research in computer vision and AI. Constantly updated for performance and flexibility, our models are **fast**, **accurate**, and **easy to use**. They excel at [object detection](https://docs.ultralytics.com/tasks/detect), [tracking](https://docs.ultralytics.com/modes/track), [instance segmentation](https://docs.ultralytics.com/tasks/segment), [semantic segmentation](https://docs.ultralytics.com/tasks/semantic), [image classification](https://docs.ultralytics.com/tasks/classify), and [pose estimation](https://docs.ultralytics.com/tasks/pose) tasks.
+Tối ưu hoá và nén mô hình YOLO26 cho nhận diện thiết bị bảo hộ lao động (PPE), triển khai realtime trên Jetson Orin NX kèm dashboard giám sát và chatbot hỏi đáp.
 
-Find detailed documentation in the [Ultralytics Docs](https://docs.ultralytics.com/). Get support via [GitHub Issues](https://github.com/ultralytics/ultralytics/issues/new/choose). Join discussions on [Discord](https://discord.com/invite/ultralytics), [Reddit](https://www.reddit.com/r/ultralytics/), and the [Ultralytics Community Forums](https://community.ultralytics.com/)!
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Model](https://img.shields.io/badge/model-YOLO26-orange)
+![Device](https://img.shields.io/badge/edge-Jetson%20Orin%20NX-76B900)
+![Status](https://img.shields.io/badge/status-in%20development-yellow)
 
-Request an Enterprise License for commercial use at [Ultralytics Licensing](https://www.ultralytics.com/license).
+[Roadmap](#-roadmap) •
+[Tổng quan](#-tổng-quan) •
+[Pipeline](#-pipeline) •
+[Cài đặt](#-cài-đặt) •
+[Sử dụng](#-sử-dụng) •
+[Kết quả](#-kết-quả) •
+[Nhóm thực hiện](#-nhóm-thực-hiện)
 
-<a href="https://platform.ultralytics.com/ultralytics/yolo26" target="_blank">
-  <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/refs/heads/main/yolo/performance-comparison.png" alt="YOLO26 performance plots">
-</a>
-
-<div align="center">
-  <a href="https://github.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="2%" alt="Ultralytics GitHub"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
-  <a href="https://www.linkedin.com/company/ultralytics/"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="2%" alt="Ultralytics LinkedIn"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
-  <a href="https://twitter.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="2%" alt="Ultralytics Twitter"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
-  <a href="https://www.youtube.com/ultralytics?sub_confirmation=1"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-youtube.png" width="2%" alt="Ultralytics YouTube"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
-  <a href="https://www.tiktok.com/@ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-tiktok.png" width="2%" alt="Ultralytics TikTok"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
-  <a href="https://ultralytics.com/bilibili"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-bilibili.png" width="2%" alt="Ultralytics BiliBili"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
-  <a href="https://discord.com/invite/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-discord.png" width="2%" alt="Ultralytics Discord"></a>
 </div>
 
-## 📄 Documentation
+---
 
-See below for quickstart installation and usage examples. For comprehensive guidance on training, validation, prediction, and deployment, refer to our full [Ultralytics Docs](https://docs.ultralytics.com/).
+## Roadmap
 
-<details open>
-<summary>Install</summary>
+- [x] Chốt pipeline: optimization search → pruning chung → fine-tune / distillation → QAT
+- [ ] Hoàn tất optimized baseline (SHO / PSO / GA)
+- [ ] Pruned baseline dùng chung (20% / 40% / 60%)
+- [ ] Fine-tune + QAT hoàn tất cho cả 3 tỷ lệ prune
+- [ ] Distillation + QAT hoàn tất cho cả 3 tỷ lệ prune
+- [ ] Benchmark đầy đủ trên Jetson Orin NX
+- [ ] Chọn model production
+- [ ] Edge inference service
+- [ ] Backend + database vi phạm
+- [ ] Chatbot (LLM tool-use trên dữ liệu vi phạm)
+- [ ] Frontend dashboard realtime
+- [ ] Test end-to-end toàn hệ thống
+- [ ] Báo cáo & slide bảo vệ đồ án
 
-Install the `ultralytics` package, including all [requirements](https://github.com/ultralytics/ultralytics/blob/main/pyproject.toml), in a [**Python>=3.8**](https://www.python.org/) environment with [**PyTorch>=1.8**](https://pytorch.org/get-started/locally/).
+---
 
-[![PyPI - Version](https://img.shields.io/pypi/v/ultralytics?logo=pypi&logoColor=white)](https://pypi.org/project/ultralytics/) [![Ultralytics Downloads](https://static.pepy.tech/badge/ultralytics)](https://clickpy.clickhouse.com/dashboard/ultralytics) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ultralytics?logo=python&logoColor=gold)](https://pypi.org/project/ultralytics/)
+## Tổng quan
+
+**PPE-YOLO26-Edge** là đồ án tốt nghiệp xây dựng pipeline hoàn chỉnh gồm 3 giai đoạn:
+
+1. **Tối ưu hoá kiến trúc** — dùng các thuật toán metaheuristic (SHO, PSO, GA) để tìm cấu hình YOLO26 tốt nhất cho bài toán PPE.
+2. **Nén mô hình** — pruning kết hợp 2 phương pháp phục hồi độ chính xác (fine-tune vs. knowledge distillation), sau đó lượng tử hoá (QAT) để chạy realtime trên phần cứng biên.
+3. **Triển khai thực tế** — inference service trên Jetson Orin NX, dashboard giám sát trực quan và chatbot trả lời câu hỏi bằng ngôn ngữ tự nhiên dựa trên dữ liệu vi phạm ghi nhận được.
+
+### Tính năng chính
+
+- Nhận diện realtime các lớp PPE: mũ bảo hộ, áo phản quang, khẩu trang, găng tay, giày bảo hộ (và trạng thái vi phạm tương ứng)
+- So sánh có kiểm soát (controlled comparison) giữa **fine-tune** và **distillation** như 2 chiến lược phục hồi độ chính xác sau pruning, trên cùng một pruned baseline
+- Xuất mô hình INT8 tối ưu cho TensorRT, benchmark trực tiếp trên Jetson Orin NX
+- Dashboard realtime hiển thị vi phạm theo thời gian/khu vực, kèm chatbot hỏi đáp bằng ngôn ngữ tự nhiên (LLM tool-use trên dữ liệu có cấu trúc)
+
+---
+
+## Pipeline
+
+```
+                    ┌──────────────────────┐
+                    │      PPE dataset      │
+                    └───────────┬──────────┘
+                                │
+                    ┌───────────▼──────────┐
+                    │  Optimization search   │   SHO · PSO · GA
+                    └───────────┬──────────┘
+                                │
+                    ┌───────────▼──────────┐
+                    │   Optimized baseline   │   YOLO26 (tuned)
+                    └───────────┬──────────┘
+                                │
+                    ┌───────────▼──────────┐
+                    │  Structured pruning    │   pruned baseline (20/40/60%)
+                    └──────┬────────┬───────┘
+                           │        │
+                 ┌─────────▼─┐   ┌──▼──────────────┐
+                 │ Fine-tune │   │   Distillation   │
+                 └─────┬─────┘   └────────┬────────┘
+                       │                  │
+                 ┌─────▼─────┐      ┌─────▼─────┐
+                 │    QAT    │      │    QAT    │
+                 └─────┬─────┘      └─────┬─────┘
+                       └─────────┬────────┘
+                                 │
+                      ┌──────────▼──────────┐
+                      │  Evaluate & compare   │   mAP · size · FPS
+                      └──────────┬──────────┘
+                                 │
+                      ┌──────────▼──────────┐
+                      │  TensorRT INT8 export │
+                      └──────────┬──────────┘
+                                 │
+                      ┌──────────▼──────────┐
+                      │  Dashboard + Chatbot  │   Jetson Orin NX
+                      └───────────────────────┘
+```
+
+Nhánh **Fine-tune** và nhánh **Distillation** cùng xuất phát từ một pruned baseline duy nhất ở mỗi tỷ lệ prune, đảm bảo so sánh công bằng giữa hai phương pháp phục hồi.
+
+
+---
+
+## Cài đặt
+
+### Yêu cầu
+
+| Thành phần | Phiên bản |
+|---|---|
+| Python | 3.10+ |
+| PyTorch | TODO |
+| Ultralytics (YOLO26) | TODO |
+| JetPack SDK (Jetson Orin NX) | TODO |
+| CUDA / TensorRT | TODO |
+
+### Clone & cài đặt
 
 ```bash
-pip install ultralytics
+git clone https://github.com/<org>/ppe-yolo26-edge.git
+cd ppe-yolo26-edge
+pip install -r requirements.txt
 ```
 
-For alternative installation methods, including [Conda](https://anaconda.org/conda-forge/ultralytics), [Docker](https://hub.docker.com/r/ultralytics/ultralytics), and building from source via Git, please consult the [Quickstart Guide](https://docs.ultralytics.com/quickstart).
+### Môi trường Jetson 
+```bash
+# Container cho training / QAT
+docker pull nvcr.io/nvidia/l4t-pytorch:<tag-khớp-jetpack>
 
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/ultralytics?logo=condaforge)](https://anaconda.org/conda-forge/ultralytics) [![Docker Image Version](https://img.shields.io/docker/v/ultralytics/ultralytics?sort=semver&logo=docker)](https://hub.docker.com/r/ultralytics/ultralytics) [![Ultralytics Docker Pulls](https://img.shields.io/docker/pulls/ultralytics/ultralytics?logo=docker)](https://hub.docker.com/r/ultralytics/ultralytics)
+# Container cho export / inference TensorRT
+docker pull nvcr.io/nvidia/l4t-tensorrt:<tag-khớp-jetpack>
+```
 
-</details>
+---
 
-<details open>
-<summary>Usage</summary>
-
-### CLI
-
-You can use Ultralytics YOLO directly from the Command Line Interface (CLI) with the `yolo` command:
+## Sử dụng
 
 ```bash
-# Predict using a pretrained YOLO model (e.g., YOLO26n) on an image
-yolo predict model=yolo26n.pt source='https://ultralytics.com/images/bus.jpg'
+# 1. Optimization search — tìm cấu hình YOLO26 tối ưu
+python optimization/sho.py --data data/ppe.yaml --generations <N> --population <N>
+
+# 2. Structured pruning trên baseline tối ưu
+python compression/pruning/prune.py --weights optimized_baseline.pt --ratio 0.4
+
+# 3a. Fine-tune nhánh phục hồi trực tiếp
+python compression/finetune_qat/finetune.py --weights pruned_baseline_0.4.pt
+
+# 3b. Distillation nhánh phục hồi qua teacher
+python compression/distill_qat/distill.py --teacher optimized_baseline.pt --student pruned_baseline_0.4.pt
+
+# 4. Quantization-aware training
+python compression/finetune_qat/qat.py --weights finetuned_0.4.pt
+python compression/distill_qat/qat.py --weights distilled_0.4.pt
+
+# 5. Export TensorRT INT8
+python export/export_trt.py --weights <model>.pt --int8
+
+# 6. Benchmark trên Jetson Orin NX
+python benchmark/run_benchmark.py --engine <model>.engine --device orin-nx
 ```
 
-The `yolo` command supports various tasks and modes, accepting additional arguments like `imgsz=640`. Explore the YOLO [CLI Docs](https://docs.ultralytics.com/usage/cli) for more examples.
+> Các lệnh trên là khung tham chiếu — cập nhật đúng tên tham số khi hoàn thiện code từng module.
 
-### Python
+---
 
-Ultralytics YOLO can also be integrated directly into your Python projects. It accepts the same [configuration arguments](https://docs.ultralytics.com/usage/cfg) as the CLI:
+## Kết quả
 
-```python
-from ultralytics import YOLO
+### 1. Optimization search
 
-# Load a pretrained YOLO26n model
-model = YOLO("yolo26n.pt")
+| Thuật toán | mAP50 | mAP50-95 | Thời gian search |
+|---|---|---|---|
+| Baseline (default) | – | – | – |
+| SHO | – | – | – |
+| PSO | – | – | – |
+| GA | – | – | – |
 
-# Train the model on the COCO8 dataset for 100 epochs
-train_results = model.train(
-    data="coco8.yaml",  # Path to dataset configuration file
-    epochs=100,  # Number of training epochs
-    imgsz=640,  # Image size for training
-    device="cpu",  # Device to run on (e.g., 'cpu', 0, [0,1,2,3])
-)
+### 2. Structured pruning (trước phục hồi)
 
-# Evaluate the model's performance on the validation set
-metrics = model.val()
+Kết quả pruning thuần (BN-gamma sparsity training + structured channel pruning), trước khi áp dụng bất kỳ phương pháp phục hồi nào — xem chi tiết tại `PLAN_PRUNE.md`.
 
-# Perform object detection on an image
-results = model("path/to/image.jpg")  # Predict on an image
-results[0].show()  # Display results
+| Tỷ lệ prune | mAP50 | mAP50-95 | Size (MB) | Δ tham số |
+|---|---|---|---|---|
+| 20% | – | – | – | – |
+| 40% | – | – | – | – |
+| 60% | – | – | – | – |
 
-# Export the model to ONNX format for deployment
-path = model.export(format="onnx")  # Returns the path to the exported model
+### 3. Fine-tune sau pruning
+
+| Tỷ lệ prune | mAP50 | mAP50-95 | Size (MB) | Δ so với baseline |
+|---|---|---|---|---|
+| 20% | – | – | – | – |
+| 40% | – | – | – | – |
+| 60% | – | – | – | – |
+
+### 4. Distillation sau pruning
+
+Teacher = optimized baseline (YOLO26 chưa prune); student = pruned baseline ở mỗi tỷ lệ. Xem công thức loss và thiết kế tại `PLAN_DISTILL.md`.
+
+| Tỷ lệ prune | Teacher | mAP50 | mAP50-95 | Size (MB) | Δ so với baseline |
+|---|---|---|---|---|---|
+| 20% | – | – | – | – | – |
+| 40% | – | – | – | – | – |
+| 60% | – | – | – | – | – |
+
+Fine-tune và Distillation cùng xuất phát từ pruned baseline tương ứng ở mục 2, cho phép so sánh trực tiếp hai chiến lược phục hồi ở bảng 3 và 4.
+
+### 5. Benchmark trên Jetson Orin NX
+
+| Model | Format | Size (MB) | FPS | Latency (ms) | mAP50 |
+|---|---|---|---|---|---|
+| Optimized baseline (FP32) | PyTorch | – | – | – | – |
+| Optimized baseline (INT8) | TensorRT | – | – | – | – |
+| Fine-tune + QAT (best) | TensorRT | – | – | – | – |
+| Distillation + QAT (best) | TensorRT | – | – | – | – |
+
+**Model production:** _TODO — điền model được chọn triển khai + lý do (trade-off tốt nhất)._
+
+> Pipeline nén mô hình (pruning → phục hồi → QAT → TensorRT INT8) tham khảo thiết kế
+> và kết quả benchmark từ nghiên cứu waste-detection trên Jetson (YOLOv8s, pruning +
+> QAT song song, TensorRT INT8 đạt mAP50-95=0.782, tăng 69.1% FPS so với FP32) — xem
+> mục [Trích dẫn](#trích-dẫn). Điểm khác biệt: đồ án này chạy pruning và QAT **nối
+> tiếp** thay vì song song, nhằm khai thác tiềm năng nén mạnh hơn.
+
+---
+
+## Dataset
+
+| Thuộc tính | Giá trị |
+|---|---|
+| Nguồn dữ liệu | TODO |
+| Số ảnh (train / val / test) | TODO |
+| Số lớp | TODO |
+| Kích thước ảnh | TODO |
+
+---
+
+## Đóng góp
+
+Đóng góp luôn được chào đón — báo lỗi, đề xuất tính năng, hoặc Pull Request. Quy trình chung:
+
+1. Tạo branch riêng theo module (`feat/pruning`, `feat/distillation`, `feat/dashboard-backend`...).
+2. Test trên baseline chung trước khi mở Pull Request.
+3. Mô tả rõ thay đổi và kết quả liên quan (mAP, size, FPS...) trong PR nếu ảnh hưởng đến pipeline nén mô hình.
+
+Mọi ý kiến đóng góp đều hữu ích, kể cả từ ngoài nhóm thực hiện đồ án.
+
+## Giấy phép
+
+Phát hành theo giấy phép [MIT](LICENSE) — cập nhật nếu trường/khoa yêu cầu giấy phép khác.
+
+## Trích dẫn
+
+```bibtex
+@article{luong2024edgeai,
+  title   = {Edge AI For Real-Time Recyclable Waste Sorting In Viet Nam: A Practical Approach For Smart And Sustainable Cities},
+  author  = {Luong, Tam Thanh and Do, Hop Quang and Nguyen, Anh Tien and Trinh, Khanh Bao and Trieu, Dat Quoc and Hoang, Giang Minh and Hoang, Thang Nam},
+  journal = {The Purdue Conference for Industrial Engineering and Business},
+  year    = {2024},
+  url     = {https://docs.lib.purdue.edu/cib-conferences/vol2/iss1/48/}
+}
 ```
 
-Discover more examples in the YOLO [Python Docs](https://docs.ultralytics.com/usage/python).
-
-</details>
-
-## ✨ Models
-
-Ultralytics supports a wide range of YOLO models, from early versions like [YOLOv3](https://docs.ultralytics.com/models/yolov3) to the latest [YOLO26](https://docs.ultralytics.com/models/yolo26). The tables below showcase YOLO26 models pretrained on [COCO](https://docs.ultralytics.com/datasets/detect/coco) for [Detection](https://docs.ultralytics.com/tasks/detect), [Segmentation](https://docs.ultralytics.com/tasks/segment), and [Pose Estimation](https://docs.ultralytics.com/tasks/pose). [Semantic Segmentation](https://docs.ultralytics.com/tasks/semantic) models are pretrained on [Cityscapes](https://docs.ultralytics.com/datasets/semantic/cityscapes), and [Classification](https://docs.ultralytics.com/tasks/classify) models are pretrained on [ImageNet](https://docs.ultralytics.com/datasets/classify/imagenet). [Tracking](https://docs.ultralytics.com/modes/track) mode is compatible with Detection, Segmentation, and Pose models. All [Models](https://docs.ultralytics.com/models) download automatically from the latest Ultralytics [release](https://github.com/ultralytics/assets/releases) on first use.
-
-<a href="https://docs.ultralytics.com/tasks" target="_blank">
-    <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/docs/ultralytics-yolov8-tasks-banner.avif" alt="Ultralytics YOLO supported tasks">
-</a>
-<br>
-<br>
-
-<details open><summary>Detection (COCO)</summary>
-
-Explore the [Detection Docs](https://docs.ultralytics.com/tasks/detect) for usage examples. These models are trained on the [COCO dataset](https://cocodataset.org/), featuring 80 object classes.
-
-| Model                                                                                | size<br><sup>(pixels)</sup> | mAP<sup>val<br>50-95</sup> | mAP<sup>val<br>50-95(e2e)</sup> | Speed<br><sup>CPU ONNX<br>(ms)</sup> | Speed<br><sup>T4 TensorRT10<br>(ms)</sup> | params<br><sup>(M)</sup> | FLOPs<br><sup>(B)</sup> |
-| ------------------------------------------------------------------------------------ | --------------------------- | -------------------------- | ------------------------------- | ------------------------------------ | ----------------------------------------- | ------------------------ | ----------------------- |
-| [YOLO26n](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt) | 640                         | 40.9                       | 40.1                            | 38.9 ± 0.7                           | 1.7 ± 0.0                                 | 2.4                      | 5.4                     |
-| [YOLO26s](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt) | 640                         | 48.6                       | 47.8                            | 87.2 ± 0.9                           | 2.5 ± 0.0                                 | 9.5                      | 20.7                    |
-| [YOLO26m](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m.pt) | 640                         | 53.1                       | 52.5                            | 220.0 ± 1.4                          | 4.7 ± 0.1                                 | 20.4                     | 68.2                    |
-| [YOLO26l](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l.pt) | 640                         | 55.0                       | 54.4                            | 286.2 ± 2.0                          | 6.2 ± 0.2                                 | 24.8                     | 86.4                    |
-| [YOLO26x](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x.pt) | 640                         | 57.5                       | 56.9                            | 525.8 ± 4.0                          | 11.8 ± 0.2                                | 55.7                     | 193.9                   |
-
-- **mAP<sup>val</sup>** values refer to single-model single-scale performance on the [COCO val2017](https://cocodataset.org/) dataset. See [YOLO Performance Metrics](https://docs.ultralytics.com/guides/yolo-performance-metrics) for details. <br>Reproduce with `yolo val detect data=coco.yaml device=0`
-- **Speed** metrics are averaged over COCO val images using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/) instance. CPU speeds measured with [ONNX](https://onnx.ai/) export. GPU speeds measured with [TensorRT](https://developer.nvidia.com/tensorrt) export. <br>Reproduce with `yolo val detect data=coco.yaml batch=1 device=0|cpu`
-
-</details>
-
-<details><summary>Segmentation (COCO)</summary>
-
-Refer to the [Segmentation Docs](https://docs.ultralytics.com/tasks/segment) for usage examples. These models are trained on [COCO-Seg](https://docs.ultralytics.com/datasets/segment/coco), including 80 classes.
-
-| Model                                                                                        | size<br><sup>(pixels)</sup> | mAP<sup>box<br>50-95(e2e)</sup> | mAP<sup>mask<br>50-95(e2e)</sup> | Speed<br><sup>CPU ONNX<br>(ms)</sup> | Speed<br><sup>T4 TensorRT10<br>(ms)</sup> | params<br><sup>(M)</sup> | FLOPs<br><sup>(B)</sup> |
-| -------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------- | -------------------------------- | ------------------------------------ | ----------------------------------------- | ------------------------ | ----------------------- |
-| [YOLO26n-seg](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-seg.pt) | 640                         | 39.6                            | 33.9                             | 53.3 ± 0.5                           | 2.1 ± 0.0                                 | 2.7                      | 9.1                     |
-| [YOLO26s-seg](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-seg.pt) | 640                         | 47.3                            | 40.0                             | 118.4 ± 0.9                          | 3.3 ± 0.0                                 | 10.4                     | 34.2                    |
-| [YOLO26m-seg](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-seg.pt) | 640                         | 52.5                            | 44.1                             | 328.2 ± 2.4                          | 6.7 ± 0.1                                 | 23.6                     | 121.5                   |
-| [YOLO26l-seg](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-seg.pt) | 640                         | 54.4                            | 45.5                             | 387.0 ± 3.7                          | 8.0 ± 0.1                                 | 28.0                     | 139.8                   |
-| [YOLO26x-seg](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-seg.pt) | 640                         | 56.5                            | 47.0                             | 787.0 ± 6.8                          | 16.4 ± 0.1                                | 62.8                     | 313.5                   |
-
-- **mAP<sup>val</sup>** values are for single-model single-scale on the [COCO val2017](https://cocodataset.org/) dataset. See [YOLO Performance Metrics](https://docs.ultralytics.com/guides/yolo-performance-metrics) for details. <br>Reproduce with `yolo val segment data=coco.yaml device=0`
-- **Speed** metrics are averaged over COCO val images using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/) instance. CPU speeds measured with [ONNX](https://onnx.ai/) export. GPU speeds measured with [TensorRT](https://developer.nvidia.com/tensorrt) export. <br>Reproduce with `yolo val segment data=coco.yaml batch=1 device=0|cpu`
-
-</details>
-
-<details><summary>Semantic Segmentation (Cityscapes)</summary>
-
-See the [Semantic Segmentation Docs](https://docs.ultralytics.com/tasks/semantic) for usage examples. These models are trained on [Cityscapes](https://docs.ultralytics.com/datasets/semantic/cityscapes), including 19 classes.
-
-| Model                                                                                        | size<br><sup>(pixels)</sup> | mIoU<sup>val</sup> | Speed<br><sup>RTX3090 PyTorch<br>(ms)</sup> | params<br><sup>(M)</sup> | FLOPs<br><sup>(B)</sup> |
-| -------------------------------------------------------------------------------------------- | --------------------------- | ------------------ | ------------------------------------------- | ------------------------ | ----------------------- |
-| [YOLO26n-sem](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-sem.pt) | 1024 &times; 2048           | 78.3               | 4.4 ± 0.0                                   | 1.6                      | 22.7                    |
-| [YOLO26s-sem](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-sem.pt) | 1024 &times; 2048           | 80.8               | 8.4 ± 0.0                                   | 6.5                      | 88.8                    |
-| [YOLO26m-sem](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-sem.pt) | 1024 &times; 2048           | 82.0               | 19.9 ± 0.1                                  | 14.3                     | 304.5                   |
-| [YOLO26l-sem](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-sem.pt) | 1024 &times; 2048           | 82.9               | 26.5 ± 0.1                                  | 17.9                     | 384.7                   |
-| [YOLO26x-sem](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-sem.pt) | 1024 &times; 2048           | 83.6               | 48.9 ± 0.2                                  | 40.2                     | 861.7                   |
-
-- **mIoU<sup>val</sup>** values are for single-model single-scale on the [Cityscapes](https://www.cityscapes-dataset.com/) validation set. <br>Reproduce with `yolo semantic val data=cityscapes.yaml device=0 imgsz=2048`
-- **Speed** metrics are averaged over Cityscapes validation images using an RTX3090 instance. <br>Reproduce with `yolo semantic val data=cityscapes.yaml batch=1 device=0|cpu imgsz=2048`
-
-</details>
-
-<details><summary>Classification (ImageNet)</summary>
-
-Consult the [Classification Docs](https://docs.ultralytics.com/tasks/classify) for usage examples. These models are trained on [ImageNet](https://docs.ultralytics.com/datasets/classify/imagenet), covering 1000 classes.
-
-| Model                                                                                        | size<br><sup>(pixels)</sup> | acc<br><sup>top1</sup> | acc<br><sup>top5</sup> | Speed<br><sup>CPU ONNX<br>(ms)</sup> | Speed<br><sup>T4 TensorRT10<br>(ms)</sup> | params<br><sup>(M)</sup> | FLOPs<br><sup>(B) at 224</sup> |
-| -------------------------------------------------------------------------------------------- | --------------------------- | ---------------------- | ---------------------- | ------------------------------------ | ----------------------------------------- | ------------------------ | ------------------------------ |
-| [YOLO26n-cls](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-cls.pt) | 224                         | 71.4                   | 90.1                   | 5.0 ± 0.3                            | 1.1 ± 0.0                                 | 2.8                      | 0.5                            |
-| [YOLO26s-cls](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-cls.pt) | 224                         | 76.0                   | 92.9                   | 7.9 ± 0.2                            | 1.3 ± 0.0                                 | 6.7                      | 1.6                            |
-| [YOLO26m-cls](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-cls.pt) | 224                         | 78.1                   | 94.2                   | 17.2 ± 0.4                           | 2.0 ± 0.0                                 | 11.6                     | 4.9                            |
-| [YOLO26l-cls](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-cls.pt) | 224                         | 79.0                   | 94.6                   | 23.2 ± 0.3                           | 2.8 ± 0.0                                 | 14.1                     | 6.2                            |
-| [YOLO26x-cls](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-cls.pt) | 224                         | 79.9                   | 95.0                   | 41.4 ± 0.9                           | 3.8 ± 0.0                                 | 29.6                     | 13.6                           |
-
-- **acc** values represent model accuracy on the [ImageNet](https://www.image-net.org/) dataset validation set. <br>Reproduce with `yolo val classify data=path/to/ImageNet device=0`
-- **Speed** metrics are averaged over ImageNet val images using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/) instance. CPU speeds measured with [ONNX](https://onnx.ai/) export. GPU speeds measured with [TensorRT](https://developer.nvidia.com/tensorrt) export. <br>Reproduce with `yolo val classify data=path/to/ImageNet batch=1 device=0|cpu`
-
-</details>
-
-<details><summary>Pose (COCO)</summary>
-
-See the [Pose Estimation Docs](https://docs.ultralytics.com/tasks/pose) for usage examples. These models are trained on [COCO-Pose](https://docs.ultralytics.com/datasets/pose/coco), focusing on the 'person' class.
-
-| Model                                                                                          | size<br><sup>(pixels)</sup> | mAP<sup>pose<br>50-95(e2e)</sup> | mAP<sup>pose<br>50(e2e)</sup> | Speed<br><sup>CPU ONNX<br>(ms)</sup> | Speed<br><sup>T4 TensorRT10<br>(ms)</sup> | params<br><sup>(M)</sup> | FLOPs<br><sup>(B)</sup> |
-| ---------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------- | ----------------------------- | ------------------------------------ | ----------------------------------------- | ------------------------ | ----------------------- |
-| [YOLO26n-pose](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-pose.pt) | 640                         | 57.2                             | 83.3                          | 40.3 ± 0.5                           | 1.8 ± 0.0                                 | 2.9                      | 7.5                     |
-| [YOLO26s-pose](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-pose.pt) | 640                         | 63.0                             | 86.6                          | 85.3 ± 0.9                           | 2.7 ± 0.0                                 | 10.4                     | 23.9                    |
-| [YOLO26m-pose](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-pose.pt) | 640                         | 68.8                             | 89.6                          | 218.0 ± 1.5                          | 5.0 ± 0.1                                 | 21.5                     | 73.1                    |
-| [YOLO26l-pose](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-pose.pt) | 640                         | 70.4                             | 90.5                          | 275.4 ± 2.4                          | 6.5 ± 0.1                                 | 25.9                     | 91.3                    |
-| [YOLO26x-pose](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-pose.pt) | 640                         | 71.6                             | 91.6                          | 565.4 ± 3.0                          | 12.2 ± 0.2                                | 57.6                     | 201.7                   |
-
-- **mAP<sup>val</sup>** values are for single-model single-scale on the [COCO Keypoints val2017](https://docs.ultralytics.com/datasets/pose/coco) dataset. See [YOLO Performance Metrics](https://docs.ultralytics.com/guides/yolo-performance-metrics) for details. <br>Reproduce with `yolo val pose data=coco-pose.yaml device=0`
-- **Speed** metrics are averaged over COCO val images using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/) instance. CPU speeds measured with [ONNX](https://onnx.ai/) export. GPU speeds measured with [TensorRT](https://developer.nvidia.com/tensorrt) export. <br>Reproduce with `yolo val pose data=coco-pose.yaml batch=1 device=0|cpu`
-
-</details>
-
-<details><summary>Oriented Bounding Boxes (DOTAv1)</summary>
-
-Check the [OBB Docs](https://docs.ultralytics.com/tasks/obb) for usage examples. These models are trained on [DOTAv1](https://docs.ultralytics.com/datasets/obb/dota-v2#dota-v10/), including 15 classes.
-
-| Model                                                                                        | size<br><sup>(pixels)</sup> | mAP<sup>test<br>50-95(e2e)</sup> | mAP<sup>test<br>50(e2e)</sup> | Speed<br><sup>CPU ONNX<br>(ms)</sup> | Speed<br><sup>T4 TensorRT10<br>(ms)</sup> | params<br><sup>(M)</sup> | FLOPs<br><sup>(B)</sup> |
-| -------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------- | ----------------------------- | ------------------------------------ | ----------------------------------------- | ------------------------ | ----------------------- |
-| [YOLO26n-obb](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-obb.pt) | 1024                        | 52.4                             | 78.9                          | 97.7 ± 0.9                           | 2.8 ± 0.0                                 | 2.5                      | 14.0                    |
-| [YOLO26s-obb](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-obb.pt) | 1024                        | 54.8                             | 80.9                          | 218.0 ± 1.4                          | 4.9 ± 0.1                                 | 9.8                      | 55.1                    |
-| [YOLO26m-obb](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-obb.pt) | 1024                        | 55.3                             | 81.0                          | 579.2 ± 3.8                          | 10.2 ± 0.3                                | 21.2                     | 183.3                   |
-| [YOLO26l-obb](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-obb.pt) | 1024                        | 56.2                             | 81.6                          | 735.6 ± 3.1                          | 13.0 ± 0.2                                | 25.6                     | 230.0                   |
-| [YOLO26x-obb](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-obb.pt) | 1024                        | 56.7                             | 81.7                          | 1485.7 ± 11.5                        | 30.5 ± 0.9                                | 57.6                     | 516.5                   |
-
-- **mAP<sup>test</sup>** values are for single-model multiscale performance on the [DOTAv1 test set](https://captain-whu.github.io/DOTA/dataset.html). <br>Reproduce by `yolo val obb data=DOTAv1.yaml device=0 split=test` and submit merged results to the [DOTA evaluation server](https://captain-whu.github.io/DOTA/evaluation.html).
-- **Speed** metrics are averaged over [DOTAv1 val images](https://docs.ultralytics.com/datasets/obb/dota-v2#dota-v10) using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/) instance. CPU speeds measured with [ONNX](https://onnx.ai/) export. GPU speeds measured with [TensorRT](https://developer.nvidia.com/tensorrt) export. <br>Reproduce by `yolo val obb data=DOTAv1.yaml batch=1 device=0|cpu`
-
-</details>
-
-## 🧩 Integrations
-
-Our key integrations with leading AI platforms extend the functionality of Ultralytics' offerings, enhancing tasks like dataset labeling, training, visualization, and model management. Discover how Ultralytics, in collaboration with partners like [Weights & Biases](https://docs.ultralytics.com/integrations/weights-biases), [Comet ML](https://docs.ultralytics.com/integrations/comet), [Roboflow](https://docs.ultralytics.com/integrations/roboflow), and [Intel OpenVINO](https://docs.ultralytics.com/integrations/openvino), can optimize your AI workflow. Explore more at [Ultralytics Integrations](https://docs.ultralytics.com/integrations).
-
-<a href="https://platform.ultralytics.com" target="_blank">
-    <img width="100%" src="https://github.com/ultralytics/assets/raw/main/yolov8/banner-integrations.png" alt="Ultralytics active learning integrations">
-</a>
-
-## 🤝 Contribute
-
-We thrive on community collaboration! Ultralytics YOLO wouldn't be the SOTA framework it is without contributions from developers like you. Please see our [Contributing Guide](https://docs.ultralytics.com/help/contributing) to get started. We also welcome your feedback—share your experience by completing our [Survey](https://www.ultralytics.com/survey?utm_source=github&utm_medium=social&utm_campaign=Survey). A huge **Thank You** 🙏 to everyone who contributes!
-
-<!-- SVG image from https://opencollective.com/ultralytics/contributors.svg?width=1280 -->
-
-[![Ultralytics open-source contributors](https://raw.githubusercontent.com/ultralytics/assets/main/im/image-contributors.png)](https://github.com/ultralytics/ultralytics/graphs/contributors)
-
-We look forward to your contributions to help make the Ultralytics ecosystem even better!
-
-## 📜 License
-
-Ultralytics offers two licensing options to suit different needs:
-
-- **AGPL-3.0 License**: This [OSI-approved](https://opensource.org/license/agpl-3.0) open-source license is perfect for students, researchers, and enthusiasts. It encourages open collaboration and knowledge sharing. See the [LICENSE](https://github.com/ultralytics/ultralytics/blob/main/LICENSE) file for full details.
-- **Ultralytics Enterprise License**: For development and production use, this license enables seamless integration of Ultralytics software and AI models into business products and services, including internal tools, automated workflows, and production deployments, bypassing the open-source requirements of AGPL-3.0. To get started, please contact us via [Ultralytics Licensing](https://www.ultralytics.com/license).
-
-## 📞 Contact
-
-For bug reports and feature requests related to Ultralytics software, please visit [GitHub Issues](https://github.com/ultralytics/ultralytics/issues). For questions, discussions, and community support, join our active communities on [Discord](https://discord.com/invite/ultralytics), [Reddit](https://www.reddit.com/r/ultralytics/), and the [Ultralytics Community Forums](https://community.ultralytics.com/). We're here to help with all things Ultralytics!
-
-<br>
-<div align="center">
-  <a href="https://github.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="3%" alt="Ultralytics GitHub"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="space">
-  <a href="https://www.linkedin.com/company/ultralytics/"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="3%" alt="Ultralytics LinkedIn"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="space">
-  <a href="https://twitter.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="3%" alt="Ultralytics Twitter"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="space">
-  <a href="https://www.youtube.com/ultralytics?sub_confirmation=1"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-youtube.png" width="3%" alt="Ultralytics YouTube"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="space">
-  <a href="https://www.tiktok.com/@ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-tiktok.png" width="3%" alt="Ultralytics TikTok"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="space">
-  <a href="https://ultralytics.com/bilibili"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-bilibili.png" width="3%" alt="Ultralytics BiliBili"></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="space">
-  <a href="https://discord.com/invite/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-discord.png" width="3%" alt="Ultralytics Discord"></a>
-</div>
