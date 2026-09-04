@@ -9,6 +9,7 @@ Example:
     python scripts/train_sparsity.py
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -55,26 +56,41 @@ def _bn_gamma_stats(trainer):
     )
 
 
-def main():
-    model = YOLO("weights/yolo26n.pt")
+def parse_opt():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--weights", type=str, default="weights/yolo26n.pt", help="starting checkpoint")
+    parser.add_argument("--data", type=str, default="coco128.yaml")
+    parser.add_argument("--epochs", type=int, default=200)
+    parser.add_argument("--patience", type=int, default=200)
+    parser.add_argument("--batch", type=int, default=8)
+    parser.add_argument("--imgsz", type=int, default=640)
+    # sr=1e-2 matches JasonSloan/yolov8-prune's train-sparsity.py (same BN-gamma
+    # Network Slimming technique), which reports mAP50=0.964-0.972 after the full
+    # sparsity->prune->finetune pipeline — i.e. sparsity training there does NOT
+    # crash val to near-zero the way our earlier constant-sr runs did. The other
+    # piece of that reference besides sr magnitude: sr decays over training
+    # (srtmp = sr*(1-0.9*epoch/epochs), now implemented in engine/trainer.py) so
+    # L1 pressure eases off in the back half instead of accumulating the whole run.
+    parser.add_argument("--sr", type=float, default=1e-2, help="BN-gamma L1 strength")
+    parser.add_argument("--project", type=str, default="runs/detect")
+    parser.add_argument("--name", type=str, default="train-sparsity")
+    return parser.parse_args()
+
+
+def main(opt):
+    model = YOLO(opt.weights)
     model.add_callback("on_train_epoch_end", _bn_gamma_stats)
     model.train(
-        # sr=1e-2 matches JasonSloan/yolov8-prune's train-sparsity.py (same BN-gamma
-        # Network Slimming technique), which reports mAP50=0.964-0.972 after the full
-        # sparsity->prune->finetune pipeline — i.e. sparsity training there does NOT
-        # crash val to near-zero the way our earlier constant-sr runs did. The other
-        # piece of that reference besides sr magnitude: sr decays over training
-        # (srtmp = sr*(1-0.9*epoch/epochs), now implemented in engine/trainer.py) so
-        # L1 pressure eases off in the back half instead of accumulating the whole run.
-        sr=1e-2,
-        data="coco128.yaml",
-        epochs=200,
-        patience=200,
-        batch=8,
-        project="runs/detect",
-        name="train-sparsity",
+        sr=opt.sr,
+        data=opt.data,
+        epochs=opt.epochs,
+        patience=opt.patience,
+        batch=opt.batch,
+        imgsz=opt.imgsz,
+        project=opt.project,
+        name=opt.name,
     )
 
 
 if __name__ == "__main__":
-    main()
+    main(parse_opt())
