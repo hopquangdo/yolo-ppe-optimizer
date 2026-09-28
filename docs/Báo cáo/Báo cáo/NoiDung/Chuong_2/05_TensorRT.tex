@@ -1,0 +1,48 @@
+\section{TensorRT}
+
+\subsection{Kiến trúc TensorRT}
+
+TensorRT là bộ SDK tối ưu và thực thi suy luận cho GPU NVIDIA. Builder tiếp nhận
+đồ thị mạng, áp dụng tối ưu như fusion, lựa chọn kernel và precision, sau đó tạo
+serialized engine. Runtime nạp engine, cấp phát tensor và thực thi qua execution
+context \cite{tensorrt}.
+
+Engine phụ thuộc vào kiến trúc GPU, phiên bản TensorRT, plugin và shape profile.
+Vì vậy, manifest của model artifact phải ghi rõ môi trường tạo engine và điều kiện
+tương thích.
+
+\subsection{ONNX}
+
+ONNX là định dạng trung gian giúp trao đổi mô hình giữa framework huấn luyện và
+runtime suy luận \cite{onnx}. Pipeline của đồ án export checkpoint sang ONNX,
+kiểm tra graph, so sánh đầu ra với framework gốc rồi mới xây dựng TensorRT
+engine. Các toán tử không được hỗ trợ phải được thay thế, phân rã hoặc hiện thực
+bằng plugin.
+
+\subsection{TensorRT Engine}
+
+TensorRT engine là artifact đã được tối ưu cho một tập cấu hình cụ thể. Quá trình
+build có thể lựa chọn tactic khác nhau theo workspace và phần cứng. Engine cần
+đi kèm input shape, data type, tên binding, preprocessing, postprocessing và hàm
+băm để Edge Runtime tải đúng cách.
+
+\subsection{FP16 Inference}
+
+FP16 inference cho phép TensorRT dùng kernel bán chính xác ở các tầng được hỗ
+trợ và quay về precision khác khi cần. Đây thường là cấu hình triển khai đầu tiên
+vì quy trình chuyển đổi đơn giản hơn INT8 và mức suy giảm accuracy nhỏ. Kết quả
+vẫn phải được so sánh với FP32 trên cùng tập test.
+
+\subsection{INT8 Inference}
+
+INT8 inference yêu cầu scale activation phù hợp. Với PTQ, TensorRT dùng
+calibrator; với QAT, thông tin lượng tử được mang theo từ graph nếu pipeline
+export hỗ trợ. Một số tầng có thể giữ FP16 hoặc FP32 để bảo toàn accuracy, tạo ra
+engine mixed precision.
+
+\subsection{TensorRT trên NVIDIA Jetson}
+
+Trên Jetson, TensorRT được phân phối cùng hệ sinh thái JetPack và sử dụng CUDA,
+cuDNN cùng driver tương ứng. Việc build engine trực tiếp trên thiết bị đích giúp
+giảm rủi ro không tương thích. Đồ án lưu riêng engine cho Jetson Nano và Jetson
+Orin Nano, thay vì giả định một engine có thể dùng chung cho mọi GPU.

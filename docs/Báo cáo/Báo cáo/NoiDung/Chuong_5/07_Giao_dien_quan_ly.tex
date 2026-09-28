@@ -1,0 +1,44 @@
+\section{Giao diện quản lý}
+
+\subsection{Dashboard}
+
+Dashboard tổng hợp số node online/offline, runtime health, deployment đang chạy,
+incident theo severity và xu hướng FPS/latency. Các thẻ số liệu đều có liên kết
+drill-down đến danh sách nguồn, tránh hiển thị con số không thể kiểm chứng.
+
+\subsection{Fleet}
+
+Trang Fleet hỗ trợ tìm kiếm và lọc node, xem capability, heartbeat, model đang
+chạy, runtime status và lịch sử command. Các hành động start/stop/restart yêu cầu
+quyền và hộp xác nhận nêu rõ target.
+
+\subsection{Models}
+
+Trang Models hiển thị model version, precision, artifact, checksum, benchmark và
+compatibility. Luồng release tách khỏi upload; người dùng phải kiểm tra validation
+trước khi version có thể được chọn cho deployment.
+
+\subsection{Deployments}
+
+Trang Deployments cho phép chọn model, selector, canary/batch và guardrail; sau
+đó hiển thị kế hoạch trước khi chạy. Màn hình chi tiết thể hiện tiến độ từng node,
+command và lý do thất bại, đồng thời cung cấp thao tác pause, resume hoặc rollback
+theo quyền.
+
+\subsection{Monitoring}
+
+Trang Monitoring hiển thị biểu đồ FPS, latency, GPU, memory, power và nhiệt độ
+theo node/model version. Người dùng có thể đặt cùng hai khoảng thời gian hoặc hai
+version để quan sát hồi quy sau triển khai.
+
+\subsection{Incidents}
+
+Trang Incidents cung cấp danh sách theo severity/status, timeline, metric snapshot,
+deployment liên quan và runbook. Acknowledge, assign và resolve đều được ghi
+audit. Nút mở Copilot truyền incident id thay vì sao chép thủ công ngữ cảnh.
+
+\subsection{Copilot}
+
+Giao diện Copilot hiển thị câu trả lời, citation, tool call và kết quả. Khi Agent
+tạo kế hoạch hành động, giao diện trình bày target, bước thực hiện, rủi ro và
+rollback; nút phê duyệt chỉ xuất hiện khi người dùng có quyền phù hợp.

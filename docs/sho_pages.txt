@@ -1,0 +1,283 @@
+=== PAGE 80 ===
+68 
+ 
+kỹ thuật bổ trợ: hồi quy OLS (Ordinary least squares) kèm sai số chuẩn điều chỉnh 
+theo cụm công trường và mô hình tuyến tính hỗn hợp MixedLM với hiệu ứng ngẫu 
+nhiên (random intercept) theo công trường. OLS cung cấp ước lượng dễ diễn giải, 
+còn MixedLM tách biến thiên giữa-công trường khỏi biến thiên trong-công trường, 
+qua đó bảo đảm suy luận phù hợp với cấu trúc dữ liệu lồng trong công trường. 
+2.3. 
+Phương pháp nghiên cứu để xây dựng mô hình trí tuệ nhân tạo nhằm 
+nhận diện và hỗ trợ kiểm soát HVKAT trên công trường xây dựng 
+(nghiên cứu thí điểm: PPE) 
+Hiện nay, các kỹ thuật học sâu (Deep learning) đã phát triển rộng rãi trong lĩnh 
+vực phát hiện đối tượng do khả năng xử lý các tính năng đa quy mô của dữ liệu. Học 
+sâu đã phổ biến các thuật toán phát hiện mục tiêu do tính đơn giản và độ chính xác 
+được cải thiện của chúng. Trong đó, mô hình mạng nơ-ron tích chập (Convolutional 
+Neural Network – CNN) là một giải pháp hữu hiệu khi ứng dụng học sâu nhằm phát 
+hiện các dấu hiệu mất an toàn trên công trường. Một vấn đề cần lưu ý đối với quản lý 
+ATLĐ là phản hồi trong thời gian ngắn, thậm chí đạt đến phản hồi trong thời gian 
+thực. Đối với mục đích này, thuật toán YOLO (You Only Look Once) - lần đầu được 
+giới thiệu năm 2015 [123] đã thể hiện tính ưu việt và dần trở thành phương pháp 
+chính trong các bài toán định dạng, phục vụ mục đích quản lý an toàn. Nghiên cứu 
+trước đây nêu bật hiệu suất vượt trội của YOLO trong việc phát hiện mũ cứng, vượt 
+qua SSD và R-FCN về tốc độ khung hình [148]. 
+Ngoài ra, để đạt được một mô hình phát hiện vừa mạnh mẽ vừa chính xác hơn, 
+một số tác giả trình bày một loạt các chiến lược tăng cường. Chúng bao gồm làm giàu 
+tập dữ liệu đào tạo [85], sửa đổi kiến trúc mạng [157], điều chỉnh cơ chế [147] và tinh 
+chỉnh các tham số [74]. Nhiều nhà nghiên cứu đã trình bày nhiều phương pháp nâng 
+cao khác nhau để đạt được một mô hình phát hiện vừa có khả năng phục hồi vừa 
+chính xác hơn [142]. Các thuật toán tối ưu hóa nằm trong số các chiến lược được sử 
+dụng để nâng cao hiệu suất phát hiện. Các thuật toán này liên quan đến việc tìm kiếm 
+các mỏ neo dựa trên vùng tối ưu [24] và tinh chỉnh các siêu tham số [150]. Mỗi thuật 
+toán tối ưu đều có những lợi thế riêng về độ mạnh mẽ và hiệu suất trong môi trường 
+nhiễu, không chắc chắn và vấn đề đa dạng. Điều quan trọng cần lưu ý là không có 
+thuật toán siêu thuật toán nào có thể luôn vượt trội hơn tất cả các thuật toán khác 
+trong mọi vấn đề tối ưu hóa có thể xảy ra. 
+Thuật toán tối ưu hóa cá ngựa (Seahorse Optimizer - SHO) là một siêu thuật 
+
+=== PAGE 81 ===
+69 
+ 
+toán tối ưu hóa được sáng tạo mới bởi Zhao, Zhang [152]. Thuật toán này mô phỏng 
+hành vi của những chú cá ngựa trong tự nhiên để giải quyết các thách thức tối ưu hóa 
+toàn cục. Là một thuật toán dựa trên dân số mới được phát triển, SHO đã chứng minh 
+được tính hiệu quả và hiệu suất của nó trong các tác vụ tối ưu hóa toàn cục. Các tham 
+số chung có khả năng thích ứng và hoạt động đơn giản của SHO góp phần tạo nên 
+tính mạnh mẽ của nó [113]. Nhiều nghiên cứu đã làm nổi bật tính ưu việt của SHO 
+so với các kỹ thuật lấy cảm hứng từ thiên nhiên khác. Hơn nữa, SHO cho thấy triển 
+vọng trong việc xác định các tham số điều chỉnh tối ưu cho nhiều mô hình học máy 
+khác nhau [11]. Với các thuộc tính này, SHO có tiềm năng cải thiện hiệu suất 
+YOLOv5 như một trình tối ưu hóa. 
+Dựa trên những hiểu biết này, nhằm nâng cao hiệu suất của mô hình phát hiện, 
+phần này nghiên cứu sẽ tiến hành xây dựng mô hình trí tuệ nhân tạo lai ghép giữa thuật 
+toán tối ưu hoá cá ngựa (SHO - Seahorse Optimizer) với mô hình học sâu YOLOv5 và 
+huấn luyện mô hình. Sau đó, mô hình đã được huấn luyện sẽ được đem vào ứng dụng 
+nhận diện và kiểm soát PPE – một lớp biểu hiện quan trọng và có khả năng quan sát 
+rõ ràng của HVKAT tại các công trường thực tế.  
+Dưới đây là phương pháp xây dựng mô hình trí tuệ nhân tạo (AI) dựa trên dữ 
+liệu trực quan để nhận diện tình trạng sử dụng/không sử dụng PPE. Cách tiếp cận 
+được triển khai theo chuỗi kỹ thuật thống nhất: (i) thu thập – xây dựng bộ dữ liệu 
+ảnh/video, (ii) gán nhãn và chuẩn hoá dữ liệu, (iii) lựa chọn và huấn luyện mô hình 
+YOLOv5, (iv) tối ưu siêu tham số bằng thuật toán tối ưu hoá cá ngựa (SHO) theo cơ 
+chế tối ưu tầng ngoài, và (v) đánh giá mô hình bằng các chỉ số chuẩn của bài toán 
+phát hiện đối tượng, bao gồm Precision, Recall, F1-score và mAP. Trình tự này nhằm 
+đảm bảo mô hình vừa đạt độ chính xác phát hiện, vừa phù hợp yêu cầu triển khai thực 
+tế (tốc độ xử lý, độ ổn định theo bối cảnh), đồng thời bảo đảm tính tái lập thông qua 
+các phụ lục mã nguồn. 
+2.3.1. Mô hình thuật toán YOLOv5 
+YOLOv5 là mô hình YOLO được giới thiệu bởi Glen Jocher, người sáng lập và 
+là giám đốc điều hành của Ultralytics – một công ty hàng đầu trong việc phát triển 
+các thuật toán tiên tiến thuộc lĩnh vực trí tuệ nhân tạo. Mô hình YOLOv5 hiệu quả 
+hơn trong việc phát hiện đối tượng lớn, đặc biệt là khả năng phát hiện nhanh và chính 
+xác với các tác vụ thời gian thực [119]. Với những ưu điểm vượt trội đó, YOLOv5 
+rất phù hợp với mục đích của nghiên cứu này. Kế thừa các thế hệ YOLO trước, vốn 
+đã được ứng dụng rất thành công trong các thao tác nhận dạng trong giao thông, y 
+
+=== PAGE 83 ===
+71 
+ 
+FPN ở phần cổ. So với cấu trúc cổ của các mô hình trước đó, YOLOv5 loại bỏ thao 
+tác tích chập sau khi lấy mẫu lên trong cấu trúc PAN, giúp duy trì hiệu suất ban đầu 
+trong khi đạt được mô hình nhẹ. Cấu trúc FPN (Feature Pyramid Network – mạng 
+lưới kim tự tháp đặc trưng) thông thường sử dụng cách tiếp cận từ trên xuống để 
+truyền tải các thông tin ngữ nghĩa sâu sắc. FPN tăng cường thông tin ngữ nghĩa của 
+các tính năng, nhưng một số thông tin bản địa hóa đối tượng sẽ bị mất. Để giảm bớt 
+vấn đề này, cấu trúc PAN-FPN thêm một mạng tổng hợp đường dẫn (PAN – Path 
+Aggregation Networks) vào trong FPN. Cấu trúc PAN này tăng cường việc tìm hiểu 
+thông tin vị trí bằng cách kết hợp các lớp từ các mức độ khác nhau để nhận ra việc 
+nâng cao đường dẫn ở dạng từ trên xuống. PAN-FPN xây dựng cấu trúc mạng từ trên 
+xuống và từ dưới lên, giúp nhận ra sự bổ sung của thông tin vị trí nông và thông tin 
+ngữ nghĩa sâu thông qua phản ứng tổng hợp tính năng, dẫn đến tính đa dạng và đầy 
+đủ của tính năng. 
+- Phần đầu: 
+Phần phát hiện đối tượng của mô hình YOLOv5 sử dụng cấu trúc đầu phân 
+nhánh, như trong Hình 2.1. Cấu trúc phần đầu sử dụng hai nhánh riêng biệt để phân 
+loại đối tượng và đưa ra giá trị dự đoán nhãn với mỗi phát hiện, đồng thời sử dụng 
+các hàm mất mát khác nhau cho hai loại nhiệm vụ này. Đối với nhiệm vụ phân loại, 
+mất mát entropy chéo nhị phân (binary cross-entropy loss – BCE loss) được sử dụng. 
+Đối với tác vụ hồi quy giới hạn hộp được dự đoán, tổn thất tiêu điểm phân phối 
+(distribution focal loss - DFL) [88] và CIoU [154] được sử dụng. Cấu trúc phát hiện 
+này có thể cải thiện độ chính xác và tăng tốc độ hội tụ mô hình, làm tăng hiệu quả khi 
+huấn luyện.  
+2.3.2. Thuật toán tối ưu hoá cá ngựa (Seahorse Optimizer - SHO) 
+Thuật toán tối ưu hóa cá ngựa (Seahorse Optimizer - SHO) là một siêu thuật 
+toán tối ưu hóa dựa trên quần thể mới lấy cảm hứng từ hành vi của cá ngựa trong môi 
+trường sống tự nhiên của chúng [152]. Thuật toán SHO bao gồm ba giai đoạn thủ tục 
+chính: di chuyển, săn mồi và sinh sản. Trong các giai đoạn này, một quy trình lựa 
+chọn tham số được sử dụng để quyết định giải pháp tốt hơn giữa 𝑋𝑖
+𝑛𝑒𝑤và 𝑋𝑖
+𝑜𝑙𝑑cho các 
+bước tiếp theo. 
+Giống như các thuật toán tối ưu hóa dựa trên dân số khác, SHO khởi tạo việc 
+tạo ra từng giải pháp trong dân số thông qua các quá trình ngẫu nhiên, như minh họa 
+trong Phương trình (2.7):  
+
+=== PAGE 85 ===
+73 
+ 
+Trong giai đoạn săn mồi, cá ngựa sử dụng cấu trúc đầu đặc biệt của chúng để 
+bắt thức ăn, thành công với xác suất 90%. Hoạt động săn mồi này được ghi lại bởi 
+Công thức (2.11). 
+(
+) (
+)
+(
+) (
+)
+new,1
+best
+best
+2
+new,2
+new,1
+new,1
+best
+.
+.
+1
+     ;      
+0.1
+{
+1
+.
+.
+.
+ ;     
+
+
+
+
+−
++
+−
+
+=
+−
+−
++
+i
+i
+i
+i
+X
+rand X
+X
+if r
+X
+X
+rand X
+X
+otherwise
+     
+(2.11) 
+trong đó 
+,1 
+new
+i
+X
+biểu diễn giải pháp mới được tạo ra trong giai đoạn di chuyển ; r2 là 
+một số ngẫu nhiên trong khoảng [0, 1]; tham số α giảm dần sau mỗi lần lặp, như được 
+mô tả bởi Công thức (2.12). t và T lần lượt là số lần lặp hiện tại và tối đa. 
+2
+1
+
+
+
+=
+−
+
+
+
+
+t
+T
+t
+T
+                                                               
+(2.12) 
+Trong giai đoạn sinh sản, việc tạo ra các giải pháp mới phản ánh sự tương tác 
+giữa cá ngựa đực và cái. Quá trình sinh sản được diễn đạt bằng toán học như sau: 
+(
+)
+2
+sort
+2
+sort
+child
+father
+mother
+3
+3
+1:
+;
+2
+1:
+;
+2
+1
+;      
+1,2,
+2
+
+
+=
+
+
+
+
+
++
+
+
+
+
+
+
+
+=
+
+
+
+
+=
++
+−
+=
+
+
+
+
+k
+k
+k
+NP
+fathers
+X
+NP
+mothers
+X
+NP
+NP
+X
+r X
+r
+X
+k
+                      
+(2.13) 
+trong đó r3 biểu thị một số ngẫu nhiên trong khoảng [0, 1]; Các thuật ngữ 
+“fathers” và “mothers” biểu thị hai quần thể được sắp xếp theo thứ tự tăng dần, được 
+trích xuất từ quần thể hiện tại sau giai đoạn săn mồi. 
+SHO là một siêu thuật toán sáng tạo dựa trên trí thông minh bầy đàn, phù hợp 
+để giải quyết nhiều vấn đề tối ưu hóa phức tạp và phi tuyến tính cao. Mặc dù có cấu 
+trúc đơn giản và bản chất thân thiện với người dùng, SHO đã chứng minh được tính 
+mạnh mẽ và sự hội tụ hiệu quả của mình trong việc giải quyết các vấn đề tối ưu hóa 
+toàn cục một mục tiêu [153]. Những đặc điểm này đã thúc đẩy một số nhà nghiên cứu 
+sử dụng SHO để giải quyết các vấn đề đa mục tiêu [10], khẳng định hiệu suất vượt 
+trội của nó so với các thuật toán khác được thiết kế cho nhiều mục tiêu [113]. Mặc dù 
+SHO đã nhận được sự hoan nghênh vì hiệu suất ấn tượng của nó trong các hàm chuẩn 
+và các ứng dụng thực tế [7, 11], nhưng nó vẫn chưa được sử dụng để điều chỉnh tham 
+số trong các kỹ thuật học máy. Trong nghiên cứu này, SHO được áp dụng như một 
+kỹ thuật tối ưu hóa để cải thiện hiệu suất của YOLOv5. Sự cải thiện này đạt được 
+

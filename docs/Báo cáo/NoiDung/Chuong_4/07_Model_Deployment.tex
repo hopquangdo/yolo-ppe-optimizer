@@ -1,0 +1,61 @@
+\section{Thiết kế Model Deployment}
+
+\subsection{Lưu trữ và phân phối model}
+
+Model sau tối ưu (Chương~\ref{chap:toi-uu}) được lưu trên một kho model kiểu
+Hugging Face Hub, có thể là huggingface.co, mirror hoặc máy chủ tự dựng. Mỗi
+model được tham chiếu bằng \texttt{ModelRef(repo\_id, filename, revision)}.
+Khi phân giải, \texttt{HuggingFaceModelRepository} chuyển \texttt{revision}
+(nhánh hoặc tag) thành \emph{commit SHA} cụ thể và sinh URL tải đã ghim theo SHA
+đó (\texttt{ModelLocation}). Vì URL trỏ đến nội dung bất biến của một commit, hai
+node triển khai cùng một deployment chắc chắn nhận cùng một tệp model, kể cả khi
+nhánh \texttt{main} được cập nhật giữa chừng.
+
+Phía Edge, \texttt{HttpArtifactFetcher} tải model qua HTTPS theo từng khối 1~MB
+vào tệp tạm \texttt{.part}, sau đó đổi tên nguyên tử thành tệp đích. Tệp được lưu
+cache theo hàm băm SHA-256 của URL (bỏ phần query), nên triển khai lại cùng model
+không tải lại. URI \texttt{file://} hoặc đường dẫn cục bộ được dùng trực tiếp,
+thuận tiện cho kiểm thử trên thiết bị.
+
+\subsection{Luồng triển khai}
+
+Luồng triển khai đầy đủ được mô tả trong Hình~\ref{fig:model-deployment-design}.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\small,
+  msg/.style={font=\scriptsize, above, fill=white, inner sep=1pt},
+  note/.style={font=\scriptsize, align=left, anchor=west, draw=gray, fill=yellow!8, rounded corners=2pt, inner sep=2pt}]
+  \foreach \x/\n/\t in {0/u/{Dashboard hoặc Assistant}, 3.4/c/{Cloud API}, 6.8/m/{MQTT}, 10.2/a/{Edge Agent}, 13.6/r/{Docker, AI Runtime}}
+    { \node[draw, rounded corners, fill=blue!5, align=center, text width=2.6cm, minimum height=1.1cm] (\n) at (\x,0) {\t};
+      \draw[dashed, gray] (\x,-0.6) -- (\x,-11.2); }
+  \draw[flowarrow] (0,-1.3) -- node[msg]{POST /deployments} (3.4,-1.3);
+  \node[note] at (3.5,-2.0) {lưu Runtime (CREATING),\\Deployment (IN\_PROGRESS)};
+  \draw[flowarrow] (3.4,-2.9) -- node[msg]{command/deploy} (6.8,-2.9);
+  \draw[flowarrow, dashed] (3.4,-3.5) -- node[msg]{202 Accepted} (0,-3.5);
+  \draw[flowarrow] (6.8,-4.1) -- node[msg]{command/deploy} (10.2,-4.1);
+  \node[note] at (10.3,-4.9) {chống trùng, lưu desired state,\\tải model (có cache)};
+  \draw[flowarrow] (10.2,-5.9) -- node[msg]{pull image, run} (13.6,-5.9);
+  \draw[flowarrow, dashed] (13.6,-6.6) -- node[msg]{container id} (10.2,-6.6);
+  \draw[flowarrow] (10.2,-7.3) -- node[msg]{event/deployment} (6.8,-7.3);
+  \draw[flowarrow] (6.8,-7.9) -- node[msg]{DeploymentEvent} (3.4,-7.9);
+  \node[note] at (3.5,-8.7) {apply\_result: SUCCEEDED,\\Runtime RUNNING};
+  \draw[flowarrow] (10.2,-9.6) -- node[msg]{state (retained)} (6.8,-9.6);
+  \draw[flowarrow] (6.8,-10.2) -- node[msg]{NodeState} (3.4,-10.2);
+  \draw[flowarrow, dashed] (3.4,-10.8) -- node[msg]{WebSocket} (0,-10.8);
+\end{tikzpicture}}
+\caption{Trình tự triển khai model từ Dashboard đến AI Runtime}
+\label{fig:model-deployment-design}
+\end{figure}
+
+\subsection{Cập nhật và khôi phục}
+
+Cập nhật model hoặc cấu hình là một lệnh \texttt{update} với spec mới trên cùng
+\texttt{runtime\_id}. Agent chỉ tạo lại container khi spec thực sự thay đổi. Nếu
+khởi chạy với model mới thất bại, Agent báo FAILED kèm thông điệp lỗi (ví dụ
+không tải được model, image không tồn tại); người vận hành hoặc Assistant có thể
+gửi lại một \texttt{update} trỏ về model trước đó để khôi phục. Vì mỗi lệnh
+update mang \texttt{command\_id} mới, kết quả của lần thử lỗi trước không ghi đè
+kết quả khôi phục. Việc tự động canary, chia đợt và rollback theo ngưỡng telemetry
+được xác định là hướng phát triển (Chương~\ref{chap:ket-luan}).

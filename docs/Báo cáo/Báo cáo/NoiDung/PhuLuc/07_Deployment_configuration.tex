@@ -1,0 +1,28 @@
+\chapter{DEPLOYMENT CONFIGURATION}
+
+\begin{lstlisting}[caption={Mẫu cấu hình deployment}]
+deployment:
+  name: <deployment-name>
+  model_version: <released-version>
+  target:
+    device_classes: [jetson-nano, jetson-orin-nano]
+    labels:
+      environment: lab
+  strategy:
+    type: canary
+    canary_size: <number-or-percent>
+    batch_size: <number-or-percent>
+    observation_window: <duration>
+  guardrails:
+    min_fps: <value>
+    max_p95_latency_ms: <value>
+    max_error_rate: <value>
+    max_temperature_c: <value>
+  rollback:
+    automatic: <true-or-false>
+    previous_version: <last-known-good>
+\end{lstlisting}
+
+Khi phát hành, cấu hình cần liên kết deployment id, người phê duyệt, target
+snapshot và model artifact theo từng device class. Secret, credential hoặc URL có
+token không được đưa trực tiếp vào phụ lục.

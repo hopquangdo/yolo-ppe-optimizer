@@ -1,0 +1,9 @@
+\section{Kết chương}
+
+Chương 3 đã xây dựng pipeline tối ưu YOLO26n sáu giai đoạn: tìm siêu tham số
+bằng SHO, thưa hóa BatchNorm, cắt tỉa kênh 30\% theo ngưỡng toàn cục, phục hồi
+bằng chưng cất CWD hoặc fine-tune, QAT với hiệu chỉnh entropy và chuyển đổi
+TensorRT INT8. Cắt tỉa 30\% giảm 15,7\% tham số và 21,2\% FLOPs. Mỗi giai đoạn là
+một script độc lập có thể chạy lại, đầu ra được lưu cùng cấu hình để truy vết.
+Model sau tối ưu là một tệp engine được phân phối qua kho model và triển khai bởi
+nền tảng được thiết kế ở Chương 4.

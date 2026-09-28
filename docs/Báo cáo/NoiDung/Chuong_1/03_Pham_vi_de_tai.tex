@@ -1,0 +1,18 @@
+\section{Phạm vi đề tài}
+
+Đồ án tập trung vào bài toán phát hiện trang bị bảo hộ lao động bằng YOLO26n
+trên hai thiết bị đại diện là Jetson Nano và Jetson Orin Nano. Phạm vi tối ưu gồm
+tìm siêu tham số, thưa hóa và cắt tỉa kênh, chưng cất tri thức, QAT, xuất ONNX
+và tạo TensorRT engine. Các phép đo tập trung vào độ chính xác, latency, FPS, độ
+phức tạp mô hình, bộ nhớ GPU và công suất.
+
+Ở tầng nền tảng, đồ án xây dựng các chức năng cốt lõi: quản lý cluster, node,
+runtime và deployment; điều khiển container tại biên; phân phối model; telemetry
+và giám sát; Web Dashboard; AI Assistant. Hệ thống được triển khai thực tế với
+Cloud trên một máy chủ AWS EC2 và các Edge Node thử nghiệm ở quy mô phòng thí
+nghiệm (máy trạm x86 có GPU NVIDIA và thiết bị Jetson), chưa hướng đến thay thế
+một nền tảng MLOps thương mại ở quy mô hàng nghìn node.
+
+Đồ án không đặt mục tiêu nghiên cứu kiến trúc YOLO mới, phần cứng tăng tốc mới
+hay mô hình ngôn ngữ nền tảng. Triển khai theo nhóm/canary, rollback tự động, mô
+hình cảnh báo sớm bằng học máy và học liên tục được xác định là hướng phát triển.

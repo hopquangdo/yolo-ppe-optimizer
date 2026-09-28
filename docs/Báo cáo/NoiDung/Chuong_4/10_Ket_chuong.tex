@@ -1,0 +1,12 @@
+\section{Kết chương}
+
+Chương 4 đã chuyển yêu cầu của đề tài thành kiến trúc Cloud Control Plane --
+Edge Data Plane. Cloud lưu desired state dưới dạng Deployment và phát lệnh qua
+MQTT; Edge Agent hội tụ trạng thái container về desired state bằng các thao tác
+idempotent, vòng reconcile và desired state lưu trên đĩa; AI Runtime chạy pipeline
+camera--suy luận với hàng đợi giới hạn và tự đo chỉ số. Hợp đồng dùng chung,
+cơ chế \texttt{last\_command\_id}, chống lệnh trùng và giới hạn số lần thử giữ cho
+hệ thống nhất quán qua kết nối không tin cậy. Telemetry được đặc tả thống nhất
+làm nền cho giám sát và cảnh báo sớm; AI Assistant truy cập hệ thống duy nhất qua
+công cụ MCP với cơ chế kiểm soát thao tác ghi. Chương 5 trình bày việc hiện thực
+và triển khai các thành phần này.

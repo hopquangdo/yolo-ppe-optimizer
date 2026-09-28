@@ -1,0 +1,37 @@
+\section{Môi trường thực nghiệm}
+
+\subsection{Môi trường huấn luyện}
+
+Thực nghiệm mô hình được thực hiện trên hai môi trường. Các thực nghiệm sơ bộ
+(pilot) để kiểm chứng đúng đắn của từng script --- thưa hóa, cắt tỉa, phục hồi,
+chưng cất --- chạy trên máy trạm Windows chỉ dùng CPU với tập COCO128 (128 ảnh,
+80 lớp; dùng chung cho train và validation). Pipeline đầy đủ trên tập
+Construction-PPE chạy trên GPU của Google Colab qua notebook
+\texttt{yolo26\_ppe\_train\_pipeline.ipynb}, vì QAT với \texttt{pytorch-quantization}
+bắt buộc có CUDA.
+
+\begin{table}[H]
+\centering
+\caption{Môi trường thực nghiệm}
+\label{tab:experiment-devices}
+\begin{tabularx}{\textwidth}{L{3.4cm}Y}
+\toprule
+\textbf{Môi trường} & \textbf{Cấu hình}\\
+\midrule
+Pilot (CPU) & Windows 11, Python 3.12, PyTorch CPU, Ultralytics (bản mở rộng của đồ án); COCO128; ảnh 320 hoặc 640, batch 8, \texttt{workers=0}\\
+Huấn luyện đầy đủ & Google Colab GPU, đầu ra lưu trên Google Drive; Construction-PPE; ảnh 640, batch 16\\
+Jetson Nano & Jetson Nano 4GB, JetPack 4.6, power mode MAXN (10 W), quạt tản nhiệt chủ động\\
+Jetson Orin Nano & Jetson Orin Nano 8GB, JetPack 6, power mode 15 W, quạt tản nhiệt chủ động\\
+Cloud & AWS EC2 Linux, Docker Compose (Mục 5.1)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Quy trình đo trên thiết bị}
+
+Mỗi engine được đo với ảnh $640\times640$, batch 1, sau 50 lần suy luận khởi động
+(warm-up), trên 500 lần suy luận liên tiếp. Latency báo cáo gồm trung vị và p95;
+FPS tính trên cùng khoảng thời gian. Mức sử dụng GPU, bộ nhớ, công suất và nhiệt
+độ được thu bằng \texttt{tegrastats} trong bài chạy 30 phút để quan sát trạng
+thái ổn định, không chỉ vài giây đầu. Power mode và xung nhịp được cố định bằng
+\texttt{nvpmodel} và \texttt{jetson\_clocks} trước mỗi bài đo.

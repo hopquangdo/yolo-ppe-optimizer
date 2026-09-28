@@ -1,0 +1,36 @@
+\section{Tối ưu bằng QAT}
+
+\subsection{Thiết lập quantization}
+
+QAT được cấu hình cho weight và activation theo scheme \cbs{per-tensor hoặc
+per-channel, symmetric hoặc asymmetric}. Những toán tử chưa hỗ trợ INT8 hoặc
+nhạy với lượng tử được giữ ở precision cao hơn. Cấu hình quantization phải tương
+thích với đường export ONNX/TensorRT đã lựa chọn.
+
+\subsection{Fake Quantization}
+
+Các fake-quant node được chèn vào graph để mô phỏng clipping và làm tròn. Giai
+đoạn đầu thu thập thống kê activation; sau đó observer được đóng băng để scale ổn
+định trong phần cuối huấn luyện. Báo cáo lưu histogram hoặc min--max của các
+tầng nhạy cảm khi cần giải thích suy giảm accuracy.
+
+\subsection{QAT Training}
+
+QAT khởi tạo từ baseline hoặc checkpoint đã pruning và fine-tuning. Learning rate
+được đặt nhỏ hơn huấn luyện ban đầu; BatchNorm và observer được đóng băng theo
+lịch \cbs{lịch thực tế}. Quá trình theo dõi đồng thời loss, validation mAP và dấu
+hiệu mất ổn định số.
+
+\subsection{Export INT8}
+
+Checkpoint QAT được export sang ONNX với thông tin lượng tử tương ứng. Graph
+được kiểm tra bằng ONNX checker và chạy so sánh đầu ra trên một tập mẫu. Sau đó,
+TensorRT build engine INT8 hoặc mixed precision; log build và danh sách layer
+precision được lưu cùng artifact.
+
+\subsection{Đánh giá mô hình QAT}
+
+Mô hình QAT được đánh giá ở ba điểm: checkpoint fake-quant trong framework,
+ONNX sau export và TensorRT engine trên thiết bị. Chênh lệch giữa các điểm giúp
+xác định sai số đến từ lượng tử, export hay backend. Các chỉ số cần điền gồm
+Precision, Recall, $mAP@50$, $mAP@50{:}95$, latency, FPS và kích thước engine.

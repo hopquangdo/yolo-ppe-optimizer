@@ -1,0 +1,33 @@
+\section{Benchmark mô hình}
+
+Benchmark chất lượng được thực hiện trên cùng tập test và cùng cấu hình
+postprocess. Cột ``Định dạng'' biểu diễn FP32/FP16/INT8, còn Precision ở cuối
+bảng là chỉ số chất lượng nhận diện.
+
+\begin{landscape}
+\begin{table}[H]
+\centering
+\caption{Kết quả accuracy của các cấu hình tối ưu}
+\label{tab:model-accuracy-benchmark}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Model} & \textbf{Định dạng} & \textbf{Pruning} & \textbf{QAT} &
+\textbf{mAP@50} & \textbf{mAP@50:95} & \textbf{Precision} & \textbf{Recall}\\
+\midrule
+Baseline & FP32 & 0\% & Không & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned & FP32 & 20\% & Không & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned & FP32 & 30\% & Không & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned & FP32 & 40\% & Không & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+QAT & INT8 & 0\% & Có & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned + QAT & INT8 & 20\% & Có & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned + QAT & INT8 & 30\% & Có & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned + QAT & INT8 & 40\% & Có & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+\bottomrule
+\end{tabular}}
+\end{table}
+\end{landscape}
+
+Phần phân tích cần nêu mức thay đổi tuyệt đối và tương đối so với baseline, lớp
+nào suy giảm nhiều nhất và sai số đến từ pruning hay quantization. Một cấu hình
+không đạt ngưỡng accuracy bị loại trước khi benchmark deployment.

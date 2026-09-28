@@ -1,0 +1,21 @@
+# Runtime config. String values under engine/tracking/ppe name a file in the matching configs/ subfolder
+# (e.g. `engine: onnx` → configs/engine/onnx.yaml); a mapping instead overrides that file's fields inline.
+# Any field can also be overridden from the CLI (`--set engine.conf=0.4`).
+
+engine: pytorch
+weights: ../../weights/yolo26n.pt   # relative paths resolve against this configs/ folder
+
+tracking: bytetrack                # bytetrack | botsort | none
+
+ppe:
+  rules: rules
+  classes: classes
+
+source: "0"                        # video file, RTSP/HTTP URL, or camera index
+target_fps: 15                     # 0 = as fast as possible
+report_interval_sec: 5             # metrics window for sinks
+
+sinks:
+  - type: stdout                   # stdout | file | webhook | agent | mqtt | kafka
+
+log_level: INFO

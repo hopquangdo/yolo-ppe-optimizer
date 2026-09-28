@@ -1,0 +1,100 @@
+\section{Môi trường và công nghệ}
+
+\subsection{Công nghệ sử dụng}
+
+Bảng~\ref{tab:deployment-environment} liệt kê các công nghệ chính. Phiên bản
+image hạ tầng được ghim trong tệp Docker Compose để môi trường có thể tái tạo.
+
+\begin{table}[H]
+\centering
+\caption{Các thành phần phần mềm của hệ thống}
+\label{tab:deployment-environment}
+\begin{tabularx}{\textwidth}{L{3.6cm}Y}
+\toprule
+\textbf{Thành phần} & \textbf{Công nghệ và phiên bản}\\
+\midrule
+Ngôn ngữ backend & Python 3.12, lập trình bất đồng bộ \texttt{asyncio}\\
+Backend/API & FastAPI 0.141, Uvicorn, Pydantic 2.13, pydantic-settings\\
+Database & PostgreSQL 16 (image \texttt{postgres:16-alpine}), driver \texttt{asyncpg}\\
+Cache telemetry & Redis 7 (\texttt{redis:7-alpine})\\
+Message broker & Eclipse Mosquitto 2 (MQTT), client paho-mqtt qua gói \texttt{hopquangdo-messaging}\\
+Model store & Hugging Face Hub (\texttt{huggingface\_hub})\\
+Container registry & GitHub Container Registry (GHCR)\\
+Container engine (Edge) & Docker, NVIDIA Container Runtime trên Jetson\\
+AI Runtime & Ultralytics YOLO (PyTorch/ONNX/TensorRT), OpenCV\\
+AI Assistant & LangGraph 1.x, LangChain 1.x, MCP Python SDK, Claude Sonnet 5 (mô hình chính), Claude Haiku 4.5 (mô hình phụ)\\
+Giám sát & Prometheus 2.54, Alertmanager 0.27, Grafana 11.2, node-exporter 1.8, cAdvisor 0.49, DCGM exporter 3.3\\
+Frontend & React 19, TypeScript 6, Vite 8, Tailwind CSS 4, React Router 7\\
+Kiểm thử và CI/CD & pytest, pytest-asyncio, Ruff, oxlint, GitHub Actions\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Môi trường Cloud}
+
+Cloud được triển khai trên một máy ảo AWS EC2 chạy Linux, tại thư mục
+\path{/opt/edgeops}. Các thành phần được đóng gói thành bốn \emph{stack} Docker
+Compose độc lập, dùng chung mạng Docker \texttt{edgeops-cloud}:
+
+\begin{itemize}
+  \item \textbf{cloud-infra:} PostgreSQL, Redis (có mật khẩu), Mosquitto. Các tệp
+        migration SQL được gắn vào \path{/docker-entrypoint-initdb.d} nên schema
+        được tạo tự động ở lần khởi động đầu tiên.
+  \item \textbf{cloud:} image \texttt{cloud-api}, một tiến trình phục vụ REST,
+        WebSocket, MCP và embedded worker trên cổng 8000.
+  \item \textbf{assistant:} image \texttt{assistant} trên cổng 8100, gọi Cloud qua
+        tên dịch vụ nội bộ \texttt{http://api:8000}.
+  \item \textbf{web:} image \texttt{web-dashboard} (Nginx) trên cổng 80, phục vụ
+        giao diện và reverse proxy tới API, WebSocket và Assistant.
+\end{itemize}
+
+Stack \texttt{cloud-monitoring} (Prometheus, Alertmanager, Grafana) được khởi chạy
+riêng khi cần giám sát metric hạ tầng. Tất cả cấu hình nhạy cảm (mật khẩu, API
+key, token Hugging Face, khóa LLM) được đọc từ tệp \texttt{.env}, không nằm trong
+mã nguồn.
+
+\subsection{Môi trường Edge}
+
+Mỗi Edge Node cần Docker (và NVIDIA Container Runtime nếu dùng GPU). Stack Edge
+chỉ chạy tĩnh một container \texttt{edge-agent}; container này được gắn Docker
+socket của máy chủ để tạo các container AI Runtime anh em (sibling container).
+Cấu hình node gồm \texttt{EDGE\_CLUSTER\_ID}, \texttt{EDGE\_NODE\_ID}, địa chỉ
+MQTT và API key. Image Agent được build đa kiến trúc \texttt{linux/amd64} và
+\texttt{linux/arm64}, chạy được trên máy x86 và Jetson; image runtime cho Jetson
+cần base image L4T tương ứng phiên bản JetPack. Hai thiết bị mục tiêu là Jetson
+Nano và Jetson Orin Nano (thông số ở Bảng~\ref{tab:jetson-hardware}); máy trạm x86
+có GPU NVIDIA được dùng làm Edge Node trong quá trình phát triển.
+
+\subsection{Mạng}
+
+Edge chủ động kết nối ra Cloud qua MQTT (cổng công bố 11883) nên không cần mở
+cổng vào trên thiết bị; điều này phù hợp với thiết bị nằm sau NAT. Tải model đi
+qua HTTPS tới Hugging Face Hub; metric hạ tầng được đẩy qua HTTPS bằng
+Prometheus remote write. Script \texttt{tunnel-cloud-infra.sh} tạo đường hầm SSH
+tới PostgreSQL, Redis, MQTT trên Cloud để phát triển từ máy cá nhân mà không công
+khai các cổng quản trị.
+
+\subsection{CI/CD}
+
+Quy trình tích hợp và triển khai liên tục dùng GitHub Actions
+(Bảng~\ref{tab:ci-workflows}). Workflow tái sử dụng \texttt{\_build-deploy.yml}
+build image, đẩy lên GHCR với tag là commit SHA, sao chép tệp Compose và \texttt{.env}
+(lấy từ GitHub Secrets) lên EC2 qua SSH, chạy \texttt{docker compose pull} và
+\texttt{up -d}, rồi gọi health check sau khi cập nhật.
+
+\begin{table}[H]
+\centering
+\caption{Các workflow CI/CD}
+\label{tab:ci-workflows}
+\begin{tabularx}{\textwidth}{L{3.3cm}L{3.6cm}Y}
+\toprule
+\textbf{Workflow} & \textbf{Kích hoạt} & \textbf{Công việc}\\
+\midrule
+ci.yml & Mọi pull request, push lên main & Ruff, pytest cho backend; lint và build Dashboard\\
+ci-edge.yml & Thay đổi mã Edge & Build image \texttt{edge-agent} (amd64 + arm64) và \texttt{edge-runtime}; push lên GHCR khi merge\\
+deploy-cloud.yml & Thay đổi Cloud, migration & Build \texttt{cloud-api}, triển khai, kiểm tra \texttt{/health}\\
+deploy-assistant.yml & Thay đổi Assistant & Build và triển khai \texttt{assistant}\\
+deploy-web.yml & Thay đổi Dashboard & Build và triển khai \texttt{web-dashboard}\\
+\bottomrule
+\end{tabularx}
+\end{table}

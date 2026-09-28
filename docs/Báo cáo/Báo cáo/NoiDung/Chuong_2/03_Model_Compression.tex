@@ -1,0 +1,57 @@
+\section{Model Compression}
+
+\subsection{Tổng quan Model Compression}
+
+Model Compression là nhóm kỹ thuật giảm chi phí lưu trữ hoặc suy luận của mạng
+nơ-ron. Các hướng phổ biến gồm pruning, quantization, knowledge distillation và
+thiết kế kiến trúc gọn. Đồ án tập trung vào pruning và quantization vì hai kỹ thuật
+này có thể áp dụng trực tiếp lên baseline và kết hợp với TensorRT.
+
+Hiệu quả nén phải được đánh giá trên cả kích thước artifact, số phép tính lý
+thuyết và latency thực tế. Một mô hình có nhiều trọng số bằng không chưa chắc
+chạy nhanh hơn nếu backend vẫn thực hiện phép tính dense.
+
+\subsection{Model Pruning}
+
+Pruning loại bỏ trọng số, kênh hoặc cấu trúc được xem là ít quan trọng. Tiêu chí
+có thể dựa trên độ lớn trọng số, chuẩn của filter, độ nhạy loss hoặc thông tin
+gradient. Quy trình cơ bản gồm huấn luyện baseline, tính điểm quan trọng, cắt tỉa,
+fine-tuning và đánh giá lại \cite{han2016,molchanov2017}.
+
+\subsection{Structured Pruning}
+
+Structured pruning loại bỏ đơn vị có cấu trúc như channel, filter hoặc block.
+Kết quả là tensor có kích thước nhỏ hơn và có thể được thư viện dense hiện có
+khai thác mà không cần kernel thưa chuyên dụng. Đây là lựa chọn phù hợp khi mục
+tiêu cuối là TensorRT trên Jetson.
+
+Nhược điểm là mỗi quyết định loại bỏ channel ảnh hưởng đến các tầng lân cận và
+có thể làm accuracy giảm nhanh. Việc cắt tỉa cần tôn trọng quan hệ residual,
+concatenation và detection head trong kiến trúc YOLO.
+
+\subsection{Unstructured Pruning}
+
+Unstructured pruning đặt các trọng số riêng lẻ về không và có thể đạt sparsity
+cao với mức suy giảm accuracy thấp hơn. Tuy nhiên, kích thước tensor không đổi;
+latency chỉ giảm rõ khi phần cứng và runtime hỗ trợ sparse kernel tương ứng.
+
+Trong đồ án, unstructured pruning có thể được dùng làm đối chứng về sparsity,
+nhưng cấu hình triển khai ưu tiên structured pruning nếu mục tiêu là giảm latency
+thực tế trên Jetson.
+
+\subsection{Pruning Ratio}
+
+Pruning ratio biểu diễn tỷ lệ phần tử hoặc cấu trúc bị loại bỏ:
+\begin{equation}
+  r=\frac{N_{before}-N_{after}}{N_{before}}\times 100\%.
+\end{equation}
+Các mức 20\%, 30\% và 40\% được dùng làm điểm thực nghiệm ban đầu. Tỷ lệ này
+không mặc định áp dụng đồng đều cho mọi tầng; các tầng đầu, tầng đầu ra và nhánh
+nhạy cảm có thể được bảo vệ hoặc đặt ngưỡng riêng.
+
+\subsection{Fine-tuning sau Pruning}
+
+Sau pruning, phân bố đặc trưng bị thay đổi nên mô hình cần được fine-tune với
+learning rate nhỏ hơn baseline. Fine-tuning phục hồi accuracy trong khi duy trì
+cấu trúc đã cắt. Checkpoint tốt nhất được chọn theo validation mAP và phải được
+đánh giá lại trên tập test trước khi chuyển sang QAT hoặc TensorRT.

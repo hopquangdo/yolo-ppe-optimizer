@@ -1,0 +1,11 @@
+\section{Kết chương}
+
+Chương 6 đã trình bày kết quả thực nghiệm của hai phần. Về mô hình, cắt tỉa
+30\% giảm 15,7\% tham số và 21,2\% FLOPs của YOLO26n; các thực nghiệm sơ bộ xác
+nhận pipeline chạy đúng, cho thấy thưa hóa với hệ số giảm dần giữ được độ chính
+xác, mô hình sau cắt cần ngân sách phục hồi đủ dài, trọng số chưng cất lớn gây hại
+khi huấn luyện ngắn, và độ biến thiên theo seed đủ lớn để đòi hỏi so sánh nhiều
+lần chạy. Về nền tảng, 17/18 kiểm thử tự động đạt, bao phủ luồng triển khai đầu
+cuối, tự phục hồi container, telemetry, realtime và công cụ MCP; kiểm thử còn lại
+là lỗi chuyển đổi kết quả đã xác định nguyên nhân. Các kết quả này là cơ sở cho
+kết luận ở Chương 7.

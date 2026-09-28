@@ -1,0 +1,31 @@
+\section{Lựa chọn mô hình triển khai}
+
+Model triển khai được chọn từ các cấu hình không bị trội theo tập tiêu chí chất
+lượng và hiệu năng. Trước hết, loại các cấu hình không đạt ngưỡng accuracy,
+memory hoặc latency. Trong nhóm còn lại, ưu tiên cấu hình ổn định trên cả hai
+thiết bị và không phụ thuộc vào một tối ưu khó tái lập.
+
+Kết quả lựa chọn cần ghi rõ model version, pruning ratio, QAT configuration,
+precision, input shape, checksum, engine tương ứng với từng device class và bộ
+chỉ số benchmark. Model được chọn là đầu vào của Model Registry và kịch bản
+Deployment trong các chương tiếp theo, không phải một tệp tách rời khỏi bằng
+chứng thực nghiệm.
+
+\begin{table}[H]
+\centering
+\caption{Quyết định lựa chọn model triển khai}
+\label{tab:selected-model}
+\begin{tabularx}{\textwidth}{L{4cm}Y}
+\toprule
+\textbf{Thuộc tính} & \textbf{Giá trị}\\
+\midrule
+Model version & \cbs{phiên bản được chọn}\\
+Phương pháp tối ưu & \cbs{baseline/pruning/QAT/pruning + QAT}\\
+Precision & \cbs{FP16/INT8}\\
+Accuracy & \cbs{Precision, Recall, mAP}\\
+Jetson Nano & \cbs{FPS, latency, memory, power}\\
+Jetson Orin Nano & \cbs{FPS, latency, memory, power}\\
+Lý do lựa chọn & \cbs{phân tích trade-off}\\
+\bottomrule
+\end{tabularx}
+\end{table}

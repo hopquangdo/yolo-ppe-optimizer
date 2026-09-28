@@ -1,0 +1,40 @@
+\babel@toc {vietnamese}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces So sánh PTQ và QAT}}{12}{table.caption.14}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Thông tin phần cứng cần ghi nhận cho hai thiết bị Jetson}}{15}{table.caption.15}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Kết quả chất lượng của mô hình baseline}}{24}{table.caption.17}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Kết quả các cấu hình pruning}}{25}{table.caption.18}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Ma trận cấu hình tối ưu mô hình}}{27}{table.caption.20}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Quyết định lựa chọn model triển khai}}{29}{table.caption.21}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Yêu cầu chức năng của nền tảng}}{30}{table.4.1}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Bộ 8 đặc trưng telemetry chính thu thập từ Edge Node}}{38}{table.caption.26}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Các thành phần phần mềm của môi trường triển khai}}{43}{table.caption.29}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Cấu hình thiết bị thực nghiệm}}{51}{table.caption.30}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Kết quả accuracy của các cấu hình tối ưu}}{53}{table.caption.31}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces YOLO inference trên Jetson Nano}}{55}{table.caption.32}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces YOLO inference trên Jetson Orin Nano}}{57}{table.caption.33}%
+\contentsline {table}{\numberline {6.5}{\ignorespaces So sánh hiệu năng giữa Jetson Nano và Jetson Orin Nano}}{58}{table.caption.34}%
+\contentsline {table}{\numberline {6.6}{\ignorespaces Benchmark pipeline Edge Runtime}}{58}{table.caption.35}%
+\contentsline {table}{\numberline {6.7}{\ignorespaces Benchmark Edge Agent}}{59}{table.caption.36}%
+\contentsline {table}{\numberline {6.8}{\ignorespaces Benchmark Model Deployment}}{59}{table.caption.37}%
+\contentsline {table}{\numberline {6.9}{\ignorespaces Benchmark Monitoring và Incident}}{59}{table.caption.38}%
+\contentsline {table}{\numberline {6.10}{\ignorespaces Benchmark Knowledge và Copilot}}{60}{table.caption.39}%
+\contentsline {table}{\numberline {6.11}{\ignorespaces Kết quả kịch bản end-to-end}}{61}{table.caption.40}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {B.1}{\ignorespaces Các bảng hoặc collection nghiệp vụ chính}}{68}{table.B.1}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {C.1}{\ignorespaces Nhóm API tham chiếu}}{69}{table.C.1}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {D.1}{\ignorespaces Danh sách MCP tool tham chiếu}}{70}{table.D.1}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {F.1}{\ignorespaces Cấu hình tối thiểu của một lần benchmark}}{72}{table.caption.44}%
+\addvspace {10\p@ }
+\contentsfinish 

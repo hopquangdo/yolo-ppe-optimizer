@@ -1,0 +1,59 @@
+\section{Kết hợp Pruning và QAT}
+
+\subsection{Quy trình kết hợp}
+
+Quy trình kết hợp được thể hiện trong Hình~\ref{fig:pruning-qat-pipeline}. Pruning
+được thực hiện trước để thay đổi cấu trúc; fine-tuning phục hồi accuracy; QAT sau
+đó giúp mô hình thích nghi với INT8 trước khi tạo TensorRT engine.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.55cm]
+  \node[flowbox] (yolo) {YOLO};
+  \node[flowbox, below=of yolo] (prune) {Pruning};
+  \node[flowbox, below=of prune] (fine) {Fine-tuning};
+  \node[flowbox, below=of fine] (qat) {QAT};
+  \node[flowbox, below=of qat] (int8) {INT8};
+  \node[flowbox, below=of int8] (trt) {TensorRT};
+  \draw[flowarrow] (yolo) -- (prune);
+  \draw[flowarrow] (prune) -- (fine);
+  \draw[flowarrow] (fine) -- (qat);
+  \draw[flowarrow] (qat) -- (int8);
+  \draw[flowarrow] (int8) -- (trt);
+\end{tikzpicture}
+\caption{Pipeline kết hợp pruning và QAT}
+\label{fig:pruning-qat-pipeline}
+\end{figure}
+
+\subsection{Các cấu hình thực nghiệm}
+
+\begin{table}[H]
+\centering
+\caption{Ma trận cấu hình tối ưu mô hình}
+\label{tab:optimization-configs}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Cấu hình} & \textbf{Pruning ratio} & \textbf{QAT} & \textbf{Precision đích}\\
+\midrule
+Baseline & 0\% & Không & FP32\\
+Pruning 20\% & 20\% & Không & FP32/FP16\\
+Pruning 30\% & 30\% & Không & FP32/FP16\\
+Pruning 40\% & 40\% & Không & FP32/FP16\\
+QAT & 0\% & Có & INT8\\
+Pruning 20\% + QAT & 20\% & Có & INT8\\
+Pruning 30\% + QAT & 30\% & Có & INT8\\
+Pruning 40\% + QAT & 40\% & Có & INT8\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Mỗi cấu hình dùng cùng dataset split và quy trình đánh giá. Tên run, seed,
+checkpoint nguồn và cấu hình export được lưu để Model Registry có thể truy ngược
+artifact về thí nghiệm tạo ra nó.
+
+\subsection{So sánh kết quả}
+
+So sánh tập trung vào mức thay đổi accuracy và speedup so với baseline. Cần đặc
+biệt kiểm tra xem pruning và QAT có cộng dồn suy giảm hay không, đồng thời đánh
+giá lợi ích thực trên từng thiết bị. Kết quả chi tiết được trình bày ở Chương 6;
+chương này mô tả quy trình và tiêu chí lựa chọn.

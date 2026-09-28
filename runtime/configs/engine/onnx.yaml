@@ -1,0 +1,6 @@
+# Native ONNX Runtime (no torch on the hot path). Export: python scripts/export_onnx.py
+backend: onnx
+imgsz: 640
+conf: 0.25
+iou: 0.7
+providers: [CUDAExecutionProvider, CPUExecutionProvider]   # first available wins

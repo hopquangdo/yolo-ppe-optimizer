@@ -1,0 +1,43 @@
+\chapter{DEPLOYMENT CONFIGURATION}
+
+\begin{lstlisting}[caption={Triển khai Cloud trên máy chủ}]
+# 1. Ha tang: PostgreSQL, Redis, Mosquitto (migration tu chay lan dau)
+docker compose -f infra/compose/cloud/docker-compose.infra.yml \
+               --env-file infra/compose/cloud/.env up -d
+# 2. Cloud API (REST + WS + MCP + embedded worker), cong 18000 -> 8000
+docker compose -f infra/compose/cloud/docker-compose.yml \
+               --env-file infra/compose/cloud/.env up -d
+# 3. AI Assistant va Web Dashboard
+docker compose -f infra/compose/assistant/docker-compose.yml \
+               --env-file infra/compose/assistant/.env up -d
+docker compose -f infra/compose/web/docker-compose.yml up -d
+# 4. (tuy chon) Prometheus, Alertmanager, Grafana
+docker compose -f infra/compose/cloud/docker-compose.monitoring.yml \
+               --env-file infra/compose/cloud/.env up -d
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Cấu hình Edge Node (\texttt{infra/compose/edge/.env})}]
+EDGE_CLUSTER_ID=<uuid cluster>
+EDGE_NODE_ID=<uuid node da dang ky tren Cloud>
+EDGE_MQTT_HOST=<dia chi Cloud>
+EDGE_MQTT_PORT=11883
+EDGE_API_KEYS=<khoa cho API cuc bo>
+EDGE_RUNTIME_DRIVER=docker
+EDGE_IMAGE_PULL_POLICY=missing
+EDGE_STATE_DIR=/var/lib/edge-agent
+# giam sat ha tang (tuy chon)
+MONITORING_METRICS_URL=<URL remote write cua Prometheus tren Cloud>
+MONITORING_PUSH_PASSWORD=<mat khau>
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Khởi chạy Edge Agent và giám sát trên thiết bị}]
+docker compose -f infra/compose/edge/docker-compose.yml \
+               --env-file infra/compose/edge/.env up -d
+# node co GPU roi: them --profile nvidia de bat dcgm-exporter
+docker compose -f infra/compose/edge/docker-compose.monitoring.yml \
+               --env-file infra/compose/edge/.env up -d
+\end{lstlisting}
+
+Tệp \texttt{.env} chứa mật khẩu, API key, token Hugging Face và khóa LLM; trong
+CI/CD, nội dung tệp được lưu trong GitHub Secrets và chỉ ghi ra máy chủ khi triển
+khai, không đưa vào repository hay phụ lục.

@@ -1,0 +1,60 @@
+\section{Model Quantization}
+
+\subsection{Khái niệm Quantization}
+
+Quantization ánh xạ giá trị số thực có độ chính xác cao sang biểu diễn có số bit
+thấp hơn. Với lượng tử tuyến tính, một giá trị $x$ được ánh xạ thành số nguyên
+$q$ thông qua scale $s$ và zero-point $z$:
+\begin{equation}
+  q=\operatorname{clip}\left(\operatorname{round}\left(\frac{x}{s}\right)+z\right).
+\end{equation}
+Việc giảm số bit làm giảm dung lượng và có thể tăng thông lượng, nhưng gây sai số
+lượng tử cần được kiểm soát.
+
+\subsection{FP32, FP16 và INT8}
+
+FP32 là biểu diễn phổ biến khi huấn luyện và được dùng làm chuẩn chất lượng.
+FP16 giảm một nửa dung lượng mỗi phần tử, phù hợp với Tensor Core và thường giữ
+accuracy gần FP32. INT8 dùng số nguyên 8 bit, có tiềm năng giảm bộ nhớ và tăng
+tốc mạnh hơn nhưng nhạy với dải giá trị activation và yêu cầu calibration hoặc
+QAT.
+
+\subsection{Post-Training Quantization}
+
+Post-Training Quantization thực hiện lượng tử sau khi mô hình đã huấn luyện. PTQ
+không yêu cầu huấn luyện lại hoặc chỉ cần calibration dataset để ước lượng dải
+activation. Ưu điểm là quy trình nhanh; hạn chế là accuracy có thể giảm với tầng
+nhạy cảm, dữ liệu lệch hoặc mô hình nhỏ.
+
+\subsection{Quantization-Aware Training}
+
+QAT mô phỏng hiệu ứng lượng tử trong quá trình huấn luyện để trọng số thích nghi
+với sai số làm tròn và clipping \cite{jacob2018}. Forward pass sử dụng các nút
+fake quantization, còn gradient được xấp xỉ để cập nhật trọng số thực. QAT tốn
+thêm thời gian huấn luyện nhưng thường duy trì accuracy INT8 tốt hơn PTQ.
+
+\subsection{Fake Quantization}
+
+Fake quantization lượng tử và giải lượng tử tensor trong forward pass nhưng vẫn
+lưu trọng số ở dạng số thực để tối ưu. Các observer thu thập thống kê min--max
+hoặc histogram nhằm xác định scale. Khi export, các thông tin này được chuyển
+thành toán tử lượng tử hoặc metadata phục vụ TensorRT.
+
+\subsection{So sánh PTQ và QAT}
+
+\begin{table}[H]
+\centering
+\caption{So sánh PTQ và QAT}
+\label{tab:ptq-qat}
+\begin{tabularx}{\textwidth}{L{3.2cm}YY}
+\toprule
+\textbf{Tiêu chí} & \textbf{PTQ} & \textbf{QAT}\\
+\midrule
+Dữ liệu cần thiết & Tập calibration đại diện & Dữ liệu huấn luyện/validation\\
+Chi phí thực hiện & Thấp, không huấn luyện lại & Cao hơn do fine-tuning có fake quant\\
+Khả năng giữ accuracy & Phụ thuộc độ nhạy mô hình & Thường tốt hơn với INT8\\
+Độ phức tạp pipeline & Đơn giản & Cần cấu hình và export tương thích\\
+Vai trò trong đồ án & Baseline INT8 tham chiếu & Phương pháp tối ưu chính\\
+\bottomrule
+\end{tabularx}
+\end{table}

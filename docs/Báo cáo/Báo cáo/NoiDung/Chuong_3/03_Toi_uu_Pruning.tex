@@ -1,0 +1,49 @@
+\section{Tối ưu bằng Pruning}
+
+\subsection{Lựa chọn phương pháp pruning}
+
+Đồ án ưu tiên structured channel pruning vì TensorRT có thể khai thác trực tiếp
+kích thước tensor đã giảm. Điểm quan trọng của channel được tính bằng
+\cbs{chuẩn trọng số/gradient/tiêu chí thực tế}. Các tầng đầu vào, detection head
+và những nhánh có ràng buộc shape được bảo vệ hoặc cắt theo nhóm tương thích.
+
+Để đánh giá lựa chọn này, một cấu hình unstructured pruning có thể được dùng làm
+đối chứng. Nếu sparsity tăng nhưng latency không giảm, kết quả cho thấy sự khác
+biệt giữa nén số tham số và tăng tốc thực tế.
+
+\subsection{Xác định pruning ratio}
+
+Ba mức khởi đầu là 20\%, 30\% và 40\%. Với mỗi mức, pipeline tạo một cấu hình
+độc lập, ghi số channel còn lại, số tham số, FLOPs và checkpoint trước fine-tuning.
+Nếu mô hình mất ổn định ở một mức, quá trình dừng sớm và ghi rõ tầng gây lỗi thay
+vì tiếp tục tạo kết quả không hợp lệ.
+
+\subsection{Fine-tuning}
+
+Mô hình sau pruning được fine-tune từ \cbs{số epoch} epoch với learning rate
+\cbs{giá trị}. Mask hoặc cấu trúc đã cắt được khóa để phần tử bị loại bỏ không
+xuất hiện trở lại. Validation mAP được theo dõi theo epoch; checkpoint tốt nhất
+được dùng cho đánh giá test và làm đầu vào cho QAT.
+
+\subsection{Đánh giá mô hình sau pruning}
+
+\begin{table}[H]
+\centering
+\caption{Kết quả các cấu hình pruning}
+\label{tab:pruning-results}
+\begin{tabularx}{\textwidth}{L{3cm}C{2cm}C{2.2cm}C{2.2cm}C{2cm}Y}
+\toprule
+\textbf{Cấu hình} & \textbf{Ratio} & \textbf{Params} & \textbf{\shortstack{mAP@50:\\95}} &
+\textbf{Size} & \textbf{Nhận xét}\\
+\midrule
+Baseline & 0\% & \cbs{} & \cbs{} & \cbs{} & Đường chuẩn\\
+Pruned-20 & 20\% & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned-30 & 30\% & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned-40 & 40\% & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Đánh giá pruning không kết luận chỉ từ bảng trên mà tiếp tục đo TensorRT latency.
+Cấu hình có ít tham số hơn nhưng tạo shape không thuận lợi cho kernel có thể
+không đem lại speedup tương ứng.

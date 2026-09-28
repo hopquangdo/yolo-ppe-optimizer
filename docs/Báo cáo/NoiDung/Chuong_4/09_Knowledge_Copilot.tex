@@ -1,0 +1,103 @@
+\section{Thiết kế AI Assistant}
+
+AI Assistant là một dịch vụ độc lập giúp người vận hành truy vấn và điều khiển
+đội thiết bị bằng ngôn ngữ tự nhiên. Nguyên tắc thiết kế cốt lõi là \textbf{Assistant
+không bao giờ truy cập trực tiếp cơ sở dữ liệu hay broker}: mọi dữ liệu và thao
+tác đều đi qua MCP server của Cloud, nơi cùng dùng các application service với
+REST API. Nhờ đó quy tắc nghiệp vụ, kiểm tra dữ liệu và xác thực chỉ được hiện
+thực một lần.
+
+\subsection{Công cụ qua Model Context Protocol}
+
+Cloud công bố 17 công cụ qua Model Context Protocol \cite{mcp} (streamable HTTP tại \texttt{/mcp}, bảo vệ bằng
+API key), chia làm ba nhóm:
+
+\begin{itemize}
+  \item \textbf{Fleet:} \texttt{list\_clusters}, \texttt{get\_cluster},
+        \texttt{create\_cluster}, \texttt{list\_nodes}, \texttt{get\_node},
+        \texttt{register\_node}, \texttt{list\_runtimes}, \texttt{get\_runtime};
+  \item \textbf{Deployment:} \texttt{list\_deployments}, \texttt{get\_deployment},
+        \texttt{create\_deployment}, \texttt{update\_deployment},
+        \texttt{remove\_deployment}, \texttt{control\_runtime};
+  \item \textbf{Monitoring:} \texttt{get\_latest\_telemetry},
+        \texttt{get\_telemetry\_history}, \texttt{get\_node\_events}.
+\end{itemize}
+
+Schema tham số của công cụ được sinh tự động từ chữ ký hàm Python, và phía
+Assistant chuyển mỗi công cụ MCP thành một \texttt{StructuredTool} của LangChain.
+Công cụ chỉ được định nghĩa một lần tại Cloud; thêm công cụ mới không cần sửa
+Assistant.
+
+\subsection{Kiểm soát thao tác thay đổi}
+
+Các công cụ có tiền tố \texttt{create\_}, \texttt{update\_}, \texttt{remove\_},
+\texttt{register\_}, \texttt{control\_} làm thay đổi trạng thái hệ thống. Chúng bị
+ẩn hoàn toàn khỏi mô hình trừ khi cấu hình cho phép ghi. Khi được phép, prompt hệ
+thống và mô tả của từng công cụ yêu cầu mô hình chỉ gọi sau khi đã mô tả chính
+xác hành động và người dùng xác nhận rõ ràng ở một tin nhắn trước đó. Như vậy
+có hai lớp bảo vệ: lớp cấu hình (quyết định công cụ có tồn tại với mô hình hay
+không) và lớp hội thoại (bắt buộc xác nhận).
+
+\subsection{Đồ thị tác tử}
+
+Một lượt hội thoại được xử lý bằng đồ thị LangGraph \cite{langgraph} bốn nút,
+trong đó nút đầu tiên theo mẫu ReAct \cite{yao2023react}
+(Hình~\ref{fig:assistant-graph}).
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=0.6cm and 0.9cm]
+  \node[flowbox, fill=green!6] (start) {Câu hỏi};
+  \node[flowbox, right=of start] (react) {\textbf{react}\\gọi tool (ReAct)};
+  \node[flowbox, right=of react] (resp) {\textbf{response}\\viết câu trả lời};
+  \node[flowbox, right=of resp] (chart) {\textbf{genchart}\\sinh biểu đồ};
+  \node[flowbox, right=of chart] (sugg) {\textbf{suggestion}\\gợi ý tiếp};
+  \node[flowbox, below=of react, fill=gray!10] (end) {Kết thúc\\(trả lời thẳng)};
+  \node[flowbox, above=of react, fill=orange!8] (mcp) {MCP tools\\(Cloud)};
+  \draw[flowarrow] (start) -- (react);
+  \draw[flowarrow] (react) -- (resp);
+  \draw[flowarrow] (resp) -- (chart);
+  \draw[flowarrow] (chart) -- (sugg);
+  \draw[flowarrow] (react) -- node[right, font=\scriptsize]{không cần tool} (end);
+  \draw[flowarrow, <->] (react) -- node[right, font=\scriptsize]{tối đa 6 vòng} (mcp);
+\end{tikzpicture}}
+\caption{Đồ thị xử lý một lượt hội thoại của AI Assistant}
+\label{fig:assistant-graph}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{react:} mô hình chính (mặc định Claude Sonnet) lặp tối đa 6 vòng
+        \emph{gọi tool $\rightarrow$ nhận kết quả}, chỉ thu thập dữ liệu mà không
+        viết câu trả lời. Nếu ngay vòng đầu mô hình không cần tool (chào hỏi, hỏi
+        lại khi thiếu đối tượng, hỏi xác nhận), câu trả lời đó được dùng luôn và đồ
+        thị kết thúc.
+  \item \textbf{response:} tổng hợp kết quả tool thành câu trả lời, phát dần từng
+        token về giao diện.
+  \item \textbf{genchart:} mô hình nhỏ (Claude Haiku) quyết định dữ liệu có đáng
+        vẽ biểu đồ không và sinh đặc tả biểu đồ có cấu trúc; lỗi ở bước này chỉ làm
+        mất biểu đồ, không làm hỏng lượt hội thoại.
+  \item \textbf{suggestion:} sinh các câu hỏi gợi ý tiếp theo.
+\end{itemize}
+
+\textbf{Thực thi tool an toàn.} \texttt{ToolRunner} chạy các lời gọi tool của cùng
+một vòng song song (tối đa 8), gộp lời gọi trùng tên và tham số, áp thời gian chờ
+60~s cho mỗi tool. Tool không tồn tại, lỗi hoặc quá thời gian được trả về mô hình
+dưới dạng dữ liệu lỗi để mô hình tự sửa tham số hoặc giải thích, thay vì làm
+dừng cả lượt. Lịch sử hội thoại được giữ theo \texttt{session\_id} bằng checkpointer
+của LangGraph, cho phép câu hỏi nối tiếp như ``còn node 2 thì sao?''.
+
+\textbf{Giao thức phát trực tuyến.} Client gửi \texttt{POST /chat/stream} để khởi
+tạo lượt và nhận \texttt{stream\_id}, sau đó mở \texttt{GET /chat/stream/\{id\}}
+dạng Server-Sent Events. Các sự kiện theo thứ tự: \texttt{status} (đang phân tích,
+đang gọi tool nào), \texttt{tool\_end}, \texttt{token}, \texttt{done},
+\texttt{chart}, \texttt{suggestions}, hoặc một sự kiện \texttt{error} duy nhất.
+
+\subsection{So sánh với hướng tiếp cận RAG}
+
+Trong bài toán vận hành, câu hỏi chủ yếu hướng tới \emph{trạng thái hiện tại}
+của hệ thống (node nào offline, runtime nào lỗi, FPS vừa giảm bao nhiêu). Dữ
+liệu này thay đổi liên tục nên truy xuất qua tool có cấu trúc chính xác hơn so
+với tìm kiếm văn bản đã lập chỉ mục \cite{lewis2020rag}. Vì vậy đồ án ưu tiên
+tool calling qua MCP; RAG trên tài liệu, runbook được giữ ở vai trò mở rộng cho
+các câu hỏi về quy trình và kiến thức ổn định.

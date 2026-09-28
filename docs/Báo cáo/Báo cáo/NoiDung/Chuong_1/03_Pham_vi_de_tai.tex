@@ -1,0 +1,18 @@
+\section{Phạm vi đề tài}
+
+Đồ án tập trung vào bài toán phát hiện đối tượng bằng YOLO trên hai thiết bị đại
+diện là Jetson Nano và Jetson Orin Nano. Phạm vi tối ưu gồm pruning, fine-tuning,
+QAT, xuất ONNX và tạo TensorRT engine. Các phép đo tập trung vào accuracy,
+latency, FPS, model size, GPU memory, mức sử dụng tài nguyên và công suất theo
+khả năng thu thập của thiết bị thực tế.
+
+Ở tầng nền tảng, đồ án xây dựng các chức năng cốt lõi cho Fleet, Model Registry,
+Deployment, Command, Runtime, Monitoring, Incident, Knowledge và Copilot.
+Hệ thống được đánh giá trong quy mô phòng thí nghiệm với \cbs{số lượng thiết bị
+thực tế}, chưa hướng đến thay thế một nền tảng MLOps thương mại ở quy mô hàng
+nghìn node.
+
+Đồ án không đặt mục tiêu nghiên cứu một kiến trúc YOLO mới, thiết kế phần cứng
+tăng tốc mới hoặc xây dựng mô hình ngôn ngữ nền tảng. Federated learning,
+continuous learning, orchestration đa cụm và auto-remediation hoàn toàn tự động
+được xem là hướng phát triển sau khi nền tảng cốt lõi đã được kiểm chứng.

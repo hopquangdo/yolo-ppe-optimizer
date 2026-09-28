@@ -1,0 +1,31 @@
+\section{Môi trường thực nghiệm}
+
+Môi trường phải được ghi nhận ngay trước khi đo để tránh sai khác do cập nhật hệ
+thống. Ngoài thông tin trong Bảng~\ref{tab:experiment-devices}, báo cáo cần nêu
+model input size, camera/video source, batch size, power mode, clock, tản nhiệt,
+thời gian warm-up, số vòng lặp và nhiệt độ môi trường.
+
+\begin{table}[H]
+\centering
+\caption{Cấu hình thiết bị thực nghiệm}
+\label{tab:experiment-devices}
+\begin{tabularx}{\textwidth}{L{3.6cm}YY}
+\toprule
+\textbf{Thành phần} & \textbf{Jetson Nano} & \textbf{Jetson Orin Nano}\\
+\midrule
+GPU & \cbs{thông tin thực tế} & \cbs{thông tin thực tế}\\
+CUDA & \cbs{phiên bản} & \cbs{phiên bản}\\
+RAM & \cbs{dung lượng} & \cbs{dung lượng}\\
+TensorRT & \cbs{phiên bản} & \cbs{phiên bản}\\
+Power Mode & \cbs{chế độ} & \cbs{chế độ}\\
+OS/JetPack & \cbs{phiên bản} & \cbs{phiên bản}\\
+Storage & \cbs{loại thiết bị} & \cbs{loại thiết bị}\\
+Cooling & \cbs{cấu hình} & \cbs{cấu hình}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Mỗi phép đo hiệu năng chạy ít nhất \cbs{số lần lặp} lần sau \cbs{số vòng}
+warm-up. Báo cáo sử dụng median và các phần vị p90/p95 cho latency; FPS được đo
+trên cùng khoảng thời gian. Power và thermal được thu trong bài chạy đủ dài để
+quan sát trạng thái ổn định, không chỉ đo vài giây đầu.

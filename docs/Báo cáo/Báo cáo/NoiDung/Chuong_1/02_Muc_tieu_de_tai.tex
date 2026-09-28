@@ -1,0 +1,59 @@
+\section{Mục tiêu đề tài}
+
+\subsection{Mục tiêu tổng quát}
+
+Mục tiêu tổng quát của đồ án là xây dựng nền tảng quản lý và vận hành AI tại
+Edge, bao phủ vòng đời từ tối ưu mô hình đến triển khai, giám sát, xử lý sự cố và
+hỗ trợ vận hành bằng AI Copilot. Luồng tổng thể được thể hiện trong
+Hình~\ref{fig:muc-tieu-tong-quat}.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=0.65cm]
+  \node[flowbox] (opt) {Model\\Optimization};
+  \node[flowbox, right=of opt] (registry) {Model\\Registry};
+  \node[flowbox, right=of registry] (deploy) {Deployment};
+  \node[flowbox, right=of deploy] (runtime) {Edge\\Runtime};
+  \node[flowbox, right=of runtime] (monitor) {Monitoring};
+  \node[flowbox, right=of monitor] (incident) {Incident};
+  \node[flowbox, right=of incident] (copilot) {AI Copilot};
+  \draw[flowarrow] (opt) -- (registry);
+  \draw[flowarrow] (registry) -- (deploy);
+  \draw[flowarrow] (deploy) -- (runtime);
+  \draw[flowarrow] (runtime) -- (monitor);
+  \draw[flowarrow] (monitor) -- (incident);
+  \draw[flowarrow] (incident) -- (copilot);
+\end{tikzpicture}}
+\caption{Vòng đời AI tại Edge được nghiên cứu trong đồ án}
+\label{fig:muc-tieu-tong-quat}
+\end{figure}
+
+Nền tảng phải tạo được mối liên kết giữa bằng chứng thực nghiệm của một phiên
+bản mô hình với artifact được phát hành và trạng thái chạy thực tế trên từng thiết
+bị. Nhờ đó, quyết định triển khai hoặc rollback không chỉ dựa trên tên tệp mà dựa
+trên phiên bản, cấu hình tương thích, chỉ số benchmark và telemetry vận hành.
+
+\subsection{Mục tiêu cụ thể}
+
+Các mục tiêu cụ thể của đồ án gồm:
+
+\begin{enumerate}
+  \item Xây dựng và đánh giá mô hình YOLO baseline trên tập dữ liệu mục tiêu.
+  \item Tối ưu YOLO bằng pruning với nhiều pruning ratio.
+  \item Tối ưu YOLO bằng Quantization-Aware Training.
+  \item Kết hợp pruning, fine-tuning và QAT trong một pipeline có thể lặp lại.
+  \item Chuyển đổi mô hình sang ONNX và TensorRT ở chế độ FP16, INT8.
+  \item Đánh giá chất lượng và hiệu năng trên Jetson Nano.
+  \item Đánh giá chất lượng và hiệu năng trên Jetson Orin Nano.
+  \item Xây dựng Edge Runtime thực hiện chuỗi camera--inference--result.
+  \item Xây dựng Cloud Control Plane và Edge Agent quản lý đội thiết bị.
+  \item Xây dựng cơ chế Model Registry, Deployment, Monitoring và Incident
+        Management có khả năng rollback.
+  \item Xây dựng AI Copilot sử dụng Knowledge và công cụ có kiểm soát để hỗ
+        trợ truy vấn, chẩn đoán và đề xuất thao tác vận hành.
+\end{enumerate}
+
+Mỗi mục tiêu được gắn với đầu ra có thể kiểm tra, gồm mã nguồn, artifact mô
+hình, cấu hình triển khai, số liệu benchmark, lịch sử lệnh và kịch bản trình diễn
+xuyên suốt.

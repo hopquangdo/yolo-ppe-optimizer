@@ -1,0 +1,32 @@
+\section{Thiết kế Knowledge và Copilot}
+
+Copilot sử dụng hai nhóm nguồn: Knowledge cho tài liệu tương đối ổn định và tool
+cho trạng thái vận hành mới nhất. Các công cụ cốt lõi gồm:
+\begin{itemize}
+  \item \texttt{Knowledge.search()} và \texttt{Knowledge.get()};
+  \item \texttt{Fleet.get\_node()} và \texttt{Runtime.get\_metrics()};
+  \item \texttt{Deployment.get\_history()} và \texttt{Incident.get()}.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.55cm]
+  \node[flowbox] (embedding) {Embedding / Keyword};
+  \node[flowbox, below=of embedding] (candidates) {Candidate Documents};
+  \node[flowbox, below=of candidates] (select) {Agent Select};
+  \node[flowbox, below=of select, text width=3.2cm] (get) {Knowledge.get()};
+  \node[flowbox, below=of get] (reason) {Reasoning + Tools};
+  \draw[flowarrow] (embedding) -- (candidates);
+  \draw[flowarrow] (candidates) -- (select);
+  \draw[flowarrow] (select) -- (get);
+  \draw[flowarrow] (get) -- (reason);
+\end{tikzpicture}
+\caption{Luồng truy xuất tri thức của Copilot}
+\label{fig:copilot-retrieval-flow}
+\end{figure}
+
+Đối với yêu cầu đọc, Agent có thể thực thi tool sau khi kiểm tra quyền. Đối với
+yêu cầu thay đổi trạng thái, Agent tạo một kế hoạch chứa mục tiêu, target, hành
+động, rủi ro và điều kiện rollback. Policy engine quyết định kế hoạch có cần phê
+duyệt hay bị từ chối. Approval gắn với nội dung kế hoạch; nếu tham số thay đổi,
+phê duyệt cũ không còn hiệu lực.

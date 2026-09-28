@@ -1,0 +1,44 @@
+\section{Kịch bản vận hành đầu cuối}
+
+Kịch bản đánh giá xuyên suốt liên kết kết quả tối ưu mô hình với nền tảng:
+
+\begin{enumerate}
+  \item Đẩy engine của mô hình tối ưu lên kho model; phân giải thành URL đã ghim
+        commit.
+  \item Tạo cluster, đăng ký node; khởi động Edge Agent trên thiết bị và xác nhận
+        node chuyển ONLINE trên Dashboard.
+  \item Tạo deployment AI Runtime với \texttt{model\_uri} vừa tạo, nguồn là camera
+        hoặc video công trường.
+  \item Theo dõi FPS, latency, số detection, confidence trên Dashboard qua
+        WebSocket.
+  \item Dừng container runtime thủ công trên thiết bị và quan sát vòng reconcile
+        tạo lại container.
+  \item Hỏi AI Assistant về trạng thái node và telemetry gần nhất; yêu cầu
+        Assistant khởi động lại runtime và xác nhận.
+  \item Cập nhật deployment sang model khác, sau đó cập nhật ngược lại model cũ
+        để khôi phục.
+  \item Tắt Edge Agent và xác nhận Cloud đánh dấu node OFFLINE.
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\caption{Kết quả kịch bản đầu cuối}
+\label{tab:e2e-scenario}
+\begin{tabularx}{\textwidth}{L{5.4cm}C{2.6cm}Y}
+\toprule
+\textbf{Tiêu chí} & \textbf{Kiểm thử tự động} & \textbf{Trên thiết bị}\\
+\midrule
+Node đăng ký và báo ONLINE & Đạt & \cbs{}\\
+Triển khai runtime và báo SUCCEEDED & Đạt & \cbs{}\\
+Tự tạo lại container bị dừng & Đạt & \cbs{}\\
+Telemetry hiển thị realtime & Đạt (WebSocket) & \cbs{}\\
+Assistant tra cứu và điều khiển có xác nhận & Đạt (đọc) & \cbs{}\\
+Cập nhật và khôi phục model & Đạt (update) & \cbs{}\\
+Phát hiện node OFFLINE & Theo thiết kế & \cbs{}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Một lần chạy được xem là thành công khi trạng thái trên Cloud khớp trạng thái
+thực tế trên thiết bị ở mọi bước, không cần thao tác SSH vào thiết bị ngoài bước
+chủ động gây lỗi.

@@ -1,0 +1,29 @@
+\section{Benchmark Edge Runtime}
+
+Benchmark Edge Runtime đo toàn chuỗi thay vì chỉ TensorRT. Timer được đặt tại
+ranh giới các stage; end-to-end latency tính từ lúc nhận frame đến lúc tạo detection.
+Frame drop và queue depth phải được theo dõi để tránh báo cáo FPS cao trong khi
+latency tích lũy.
+
+\begin{table}[H]
+\centering
+\caption{Benchmark pipeline Edge Runtime}
+\label{tab:runtime-pipeline-benchmark}
+\begin{tabularx}{\textwidth}{L{6cm}YY}
+\toprule
+\textbf{Pipeline} & \textbf{Jetson Nano} & \textbf{Jetson Orin Nano}\\
+\midrule
+Camera Capture & \cbs{ms} & \cbs{ms}\\
+Preprocessing & \cbs{ms} & \cbs{ms}\\
+YOLO Inference & \cbs{ms} & \cbs{ms}\\
+Postprocessing & \cbs{ms} & \cbs{ms}\\
+End-to-End Latency & \cbs{ms} & \cbs{ms}\\
+FPS & \cbs{} & \cbs{}\\
+Frame Drop Rate & \cbs{} & \cbs{}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Phần thảo luận cần xác định nút thắt của từng thiết bị. Nếu inference không còn
+chiếm phần lớn thời gian, tối ưu tiếp model sẽ đem lại lợi ích nhỏ hơn tối ưu camera,
+preprocessing hoặc data movement.

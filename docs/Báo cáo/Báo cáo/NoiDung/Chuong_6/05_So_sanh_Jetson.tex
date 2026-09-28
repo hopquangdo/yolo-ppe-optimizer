@@ -1,0 +1,27 @@
+\section{So sánh Jetson Nano và Jetson Orin Nano}
+
+So sánh giữa hai thiết bị giúp đánh giá tính di động của model và mức mở rộng
+hiệu năng. Speedup được tính bằng tỷ số FPS Orin/Nano trên cùng cấu hình model;
+latency phải dùng cùng định nghĩa và cùng pipeline.
+
+\begin{table}[H]
+\centering
+\caption{So sánh hiệu năng giữa Jetson Nano và Jetson Orin Nano}
+\label{tab:jetson-comparison}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Model} & \textbf{Nano FPS} & \textbf{Orin FPS} & \textbf{Speedup} &
+\textbf{Nano Latency} & \textbf{Orin Latency}\\
+\midrule
+FP32 & \cbs{} & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+FP16 & \cbs{} & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+INT8 & \cbs{} & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+Pruned + QAT & \cbs{} & \cbs{} & \cbs{} & \cbs{} & \cbs{}\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Bảng~\ref{tab:jetson-comparison} cũng kiểm chứng việc Model Registry chọn đúng
+artifact theo device class. Nếu cùng model version cần hai engine khác nhau, hai
+artifact vẫn phải liên kết về cùng checkpoint và cấu hình tối ưu.

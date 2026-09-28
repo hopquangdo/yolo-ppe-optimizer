@@ -1,0 +1,39 @@
+\section{Đánh giá khả năng triển khai}
+
+Kịch bản đánh giá xuyên suốt liên kết toàn bộ các chương:
+
+\begin{enumerate}
+  \item Huấn luyện YOLO baseline và lưu kết quả đánh giá.
+  \item Thực hiện pruning, fine-tuning và QAT.
+  \item Tạo TensorRT INT8 engine cho từng device class.
+  \item Upload model version và artifact vào Model Registry.
+  \item Tạo canary deployment tới Jetson Nano.
+  \item Mở rộng deployment tới Jetson Orin Nano.
+  \item Theo dõi model version, FPS, latency, GPU, power và nhiệt độ.
+  \item Mô phỏng hoặc tạo điều kiện để FPS giảm dưới ngưỡng.
+  \item Monitoring phát hiện và Incident Service tạo sự cố.
+  \item Copilot truy vấn metric, deployment history và runbook để phân tích.
+  \item Người vận hành phê duyệt rollback và xác nhận runtime phục hồi.
+\end{enumerate}
+
+Một lần chạy được xem là thành công khi model được triển khai đúng target, trạng
+thái Cloud khớp actual state, suy giảm được phát hiện trong ngưỡng thời gian,
+Copilot đưa ra căn cứ phù hợp và rollback phục hồi last known good version. Báo
+cáo cần kèm timeline, ảnh chụp Dashboard, command history và metric trước/sau.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả kịch bản end-to-end}
+\label{tab:e2e-scenario}
+\begin{tabularx}{\textwidth}{L{6cm}C{3cm}Y}
+\toprule
+\textbf{Tiêu chí} & \textbf{Kết quả} & \textbf{Bằng chứng}\\
+\midrule
+Đăng ký và phát hành model & \cbs{Đạt/Không đạt} & \cbs{model version}\\
+Triển khai hai device class & \cbs{Đạt/Không đạt} & \cbs{deployment id}\\
+Phát hiện FPS suy giảm & \cbs{Đạt/Không đạt} & \cbs{metric/incident}\\
+Copilot phân tích đúng nguồn & \cbs{Đạt/Không đạt} & \cbs{tool/citation}\\
+Rollback thành công & \cbs{Đạt/Không đạt} & \cbs{command/runtime state}\\
+\bottomrule
+\end{tabularx}
+\end{table}

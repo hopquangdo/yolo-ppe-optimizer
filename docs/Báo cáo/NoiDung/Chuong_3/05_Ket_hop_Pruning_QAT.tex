@@ -1,0 +1,75 @@
+\section{Pipeline tối ưu kết hợp}
+
+\subsection{Quy trình}
+
+Quy trình kết hợp được thể hiện trong Hình~\ref{fig:pruning-qat-pipeline} và
+được đóng gói thành notebook \texttt{yolo26\_ppe\_train\_pipeline.ipynb} chạy trên
+Google Colab: mỗi ô thực hiện một giai đoạn bằng một script độc lập trong
+\texttt{scripts/}, checkpoint của giai đoạn trước là đầu vào của giai đoạn sau.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=0.5cm]
+  \node[flowbox] (sho) {SHO search\\+ baseline\\\scriptsize sho\_search.py};
+  \node[flowbox, right=of sho] (sp) {Sparsity\\training\\\scriptsize train\_sparsity.py};
+  \node[flowbox, right=of sp] (pr) {Channel\\pruning 30\%\\\scriptsize prune.py};
+  \node[flowbox, right=of pr] (rec) {Distill hoặc\\fine-tune\\\scriptsize distill.py};
+  \node[flowbox, right=of rec] (qat) {QAT\\INT8\\\scriptsize qat.py};
+  \node[flowbox, right=of qat, fill=green!6] (trt) {ONNX Q/DQ\\$\rightarrow$ TensorRT};
+  \draw[flowarrow] (sho) -- (sp);
+  \draw[flowarrow] (sp) -- (pr);
+  \draw[flowarrow] (pr) -- (rec);
+  \draw[flowarrow] (rec) -- (qat);
+  \draw[flowarrow] (qat) -- (trt);
+\end{tikzpicture}}
+\caption{Pipeline tối ưu YOLO26n từ baseline đến TensorRT INT8}
+\label{fig:pruning-qat-pipeline}
+\end{figure}
+
+Thứ tự các giai đoạn có chủ đích: cắt tỉa thay đổi cấu trúc nên phải làm trước;
+phục hồi độ chính xác trước khi lượng tử để QAT bắt đầu từ một mô hình tốt;
+QAT là bước cuối vì mọi thay đổi trọng số sau QAT sẽ làm thang lượng tử mất
+hiệu lực. Bảng~\ref{tab:pipeline-hparams} tóm tắt cấu hình từng giai đoạn.
+
+\begin{table}[H]
+\centering
+\caption{Cấu hình các giai đoạn trong pipeline tối ưu}
+\label{tab:pipeline-hparams}
+\begin{tabularx}{\textwidth}{L{3.2cm}Y}
+\toprule
+\textbf{Giai đoạn} & \textbf{Cấu hình}\\
+\midrule
+SHO + baseline & Quần thể 6, 3 thế hệ, proxy 3 epoch; huấn luyện đầy đủ 100 epoch, batch 16, ảnh 640\\
+Sparsity & 200 epoch, $s=10^{-2}$ giảm dần tuyến tính về $0{,}1s$\\
+Pruning & Tỷ lệ 0,30, ngưỡng toàn cục trên $|\gamma|$, mô hình \texttt{n}\\
+Phục hồi & Chưng cất: teacher YOLO26l, $\lambda_{cwd}=50$, $T=4$, 100 epoch; hoặc fine-tune 100 epoch\\
+QAT & 20 epoch, batch 8, SGD, $lr_0=10^{-3}/100$, hiệu chỉnh entropy 256 batch\\
+Export & ONNX Q/DQ, ảnh $640\times640$, batch 1; TensorRT FP16 và INT8\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Ma trận cấu hình đánh giá}
+
+\begin{table}[H]
+\centering
+\caption{Ma trận cấu hình tối ưu mô hình}
+\label{tab:optimization-configs}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Cấu hình} & \textbf{Pruning} & \textbf{Phục hồi / QAT} & \textbf{Precision đích}\\
+\midrule
+Baseline & 0\% & -- & FP32, FP16\\
+Pruned-30 + fine-tune & 30\% & Fine-tune & FP16\\
+Pruned-30 + distill & 30\% & Chưng cất & FP16\\
+Baseline + QAT & 0\% & QAT & INT8\\
+Pruned-30 + distill + QAT & 30\% & Chưng cất + QAT & INT8\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Mỗi cấu hình dùng cùng dataset split, cùng kích thước ảnh và cùng quy trình
+đánh giá. Tên run, seed, checkpoint nguồn và cấu hình được lưu (tệp
+\texttt{args.yaml}, \texttt{results.csv} của mỗi run) để truy ngược artifact về
+thí nghiệm tạo ra nó.

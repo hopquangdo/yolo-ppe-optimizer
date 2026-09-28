@@ -1,0 +1,10 @@
+\section{Kết chương}
+
+Chương 5 đã trình bày việc hiện thực nền tảng thành bốn dịch vụ chính --- Cloud
+Server, Edge Agent, AI Runtime, AI Assistant --- cùng hệ thống giám sát và Web
+Dashboard. Toàn bộ backend dùng chung một gói hợp đồng Pydantic; các adapter
+PostgreSQL, Redis, Docker, OpenCV, Ultralytics, Hugging Face đều có bản thay thế
+trong bộ nhớ, cho phép kiểm thử luồng triển khai mà không cần hạ tầng. Hệ thống
+được đóng gói thành các stack Docker Compose và triển khai tự động lên AWS EC2
+bằng GitHub Actions; image Edge được build đa kiến trúc cho x86 và Jetson.
+Chương 6 đánh giá kết quả tối ưu mô hình và kiểm chứng hoạt động của nền tảng.

@@ -1,0 +1,20 @@
+\section{Hạn chế}
+
+Phạm vi thiết bị thực nghiệm hiện giới hạn ở Jetson Nano và Jetson Orin Nano,
+chưa đại diện cho nhiều loại GPU, NPU hoặc CPU Edge khác. Số lượng node và quy
+mô deployment còn nhỏ nên chưa đánh giá đầy đủ hành vi khi hàng trăm hoặc hàng
+nghìn thiết bị kết nối đồng thời.
+
+Dataset và số kịch bản môi trường có thể chưa đủ lớn để phản ánh mọi điều kiện
+ánh sáng, góc camera và phân bố đối tượng. Pruning ratio và cấu hình QAT mới khảo
+sát trong một không gian hữu hạn, chưa chứng minh là tối ưu toàn cục.
+
+Monitoring hiện ưu tiên rule-based detection; khả năng phát hiện bất thường đa
+biến và drift dữ liệu chưa chuyên sâu. Copilot vẫn phụ thuộc vào chất lượng LLM,
+embedding, tài liệu và tool schema; cơ chế phê duyệt giảm rủi ro nhưng không loại
+bỏ hoàn toàn lỗi diễn giải hoặc đề xuất không phù hợp.
+
+Nền tảng nguyên mẫu chưa thay thế hệ thống MLOps/observability quy mô lớn. Các
+khía cạnh như multi-region, disaster recovery, quota đa tenant, hardware root of
+trust và kiểm thử xâm nhập cần được nghiên cứu thêm trước khi dùng trong môi
+trường sản xuất.

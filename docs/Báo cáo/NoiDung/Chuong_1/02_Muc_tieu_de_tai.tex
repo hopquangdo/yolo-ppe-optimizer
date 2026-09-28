@@ -1,0 +1,49 @@
+\section{Mục tiêu đề tài}
+
+\subsection{Mục tiêu tổng quát}
+
+Mục tiêu tổng quát của đồ án là tối ưu mô hình phát hiện đối tượng YOLO để
+chạy hiệu quả trên thiết bị Jetson, đồng thời xây dựng nền tảng quản lý tập trung
+cho phép triển khai, điều khiển, giám sát mô hình trên nhiều thiết bị biên và hỗ
+trợ vận hành bằng AI Assistant. Luồng tổng thể được thể hiện trong
+Hình~\ref{fig:muc-tieu-tong-quat}.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=0.65cm]
+  \node[flowbox] (opt) {Tối ưu\\YOLO};
+  \node[flowbox, right=of opt] (registry) {Kho model};
+  \node[flowbox, right=of registry] (deploy) {Deployment};
+  \node[flowbox, right=of deploy] (runtime) {Edge Agent\\AI Runtime};
+  \node[flowbox, right=of runtime] (monitor) {Telemetry\\Giám sát};
+  \node[flowbox, right=of monitor] (copilot) {AI Assistant};
+  \draw[flowarrow] (opt) -- (registry);
+  \draw[flowarrow] (registry) -- (deploy);
+  \draw[flowarrow] (deploy) -- (runtime);
+  \draw[flowarrow] (runtime) -- (monitor);
+  \draw[flowarrow] (monitor) -- (copilot);
+  \draw[flowarrow, dashed] (copilot.south) -- ++(0,-0.5) -| node[pos=0.25, below, font=\scriptsize]{điều khiển có xác nhận} (deploy.south);
+\end{tikzpicture}}
+\caption{Vòng đời AI tại Edge được nghiên cứu trong đồ án}
+\label{fig:muc-tieu-tong-quat}
+\end{figure}
+
+\subsection{Mục tiêu cụ thể}
+
+\begin{enumerate}
+  \item Xây dựng mô hình YOLO26n baseline cho bài toán phát hiện trang bị bảo hộ
+        lao động, với siêu tham số tìm bằng thuật toán Sea-Horse Optimizer.
+  \item Tối ưu mô hình bằng thưa hóa BatchNorm và cắt tỉa kênh có cấu trúc.
+  \item Phục hồi độ chính xác sau cắt tỉa bằng fine-tune và chưng cất tri thức.
+  \item Tối ưu bằng Quantization-Aware Training và chuyển đổi sang TensorRT INT8.
+  \item Đánh giá mô hình trên Jetson Nano và Jetson Orin Nano.
+  \item Xây dựng Cloud Control Plane quản lý cluster, node, runtime, deployment
+        theo mô hình desired state, giao tiếp với Edge qua MQTT.
+  \item Xây dựng Edge Agent điều khiển vòng đời container AI Runtime với khả năng
+        tự phục hồi, và AI Runtime chạy pipeline camera--suy luận có đo lường.
+  \item Xây dựng hệ thống telemetry, giám sát và Web Dashboard theo dõi realtime.
+  \item Xây dựng AI Assistant truy vấn và điều khiển hệ thống bằng ngôn ngữ tự
+        nhiên qua công cụ MCP có kiểm soát.
+  \item Đóng gói container và tự động hóa triển khai bằng CI/CD.
+\end{enumerate}

@@ -1,0 +1,28 @@
+# Custom PPE dataset (dataset/{train,valid,test}) — labels only, no download.
+# NOTE: class names below are placeholders (class0..class8) inferred from the
+# 9 distinct ids found in dataset/valid/valid/labels/*.txt. Rename them to the
+# real PPE classes before training.
+#
+# Server layout (Roboflow export, each split unpacked into a nested dir of the
+# same name, e.g. dataset/train/train/images):
+#   dataset/train/train/{images,labels}
+#   dataset/valid/valid/{images,labels}
+#   dataset/test/test/{images,labels}
+# `path` is relative so this works regardless of where the repo is checked out
+# (server: /home/ubuntu/dqh/yolo-ppe-optimizer/dataset, local: D:/Workspace/...).
+
+path: dataset
+train: train/train/images
+val: valid/valid/images
+test: test/test/images
+
+names:
+  0: class0
+  1: class1
+  2: class2
+  3: class3
+  4: class4
+  5: class5
+  6: class6
+  7: class7
+  8: class8

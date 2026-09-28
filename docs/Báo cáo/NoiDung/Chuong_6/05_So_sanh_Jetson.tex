@@ -1,0 +1,11 @@
+\section{So sánh Jetson Nano và Jetson Orin Nano}
+
+Speedup giữa hai thiết bị được tính bằng tỷ số FPS Orin/Nano trên cùng cấu hình
+model, đọc trực tiếp từ Bảng~\ref{tab:nano-inference} và
+Bảng~\ref{tab:orin-inference}. Kỳ vọng dựa trên thông số phần cứng: tỷ số nhân
+CUDA là 8 lần (1024 so với 128), băng thông bộ nhớ gần 2,7 lần; ngoài ra Orin
+Nano có Tensor Core nên cấu hình INT8 được hưởng lợi thêm, còn trên Nano cấu
+hình INT8 không nhanh hơn FP16 đáng kể. Do đó khoảng cách hiệu năng giữa hai thiết
+bị được dự kiến lớn nhất ở cấu hình INT8. Cùng một model version được build thành
+hai engine khác nhau; cả hai được phân phối qua kho model với tên tệp phân biệt
+theo loại thiết bị và triển khai bằng cùng một quy trình trên nền tảng.

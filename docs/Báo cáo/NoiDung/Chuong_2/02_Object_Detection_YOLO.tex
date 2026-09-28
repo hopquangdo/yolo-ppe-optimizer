@@ -1,0 +1,53 @@
+\section{Object Detection và YOLO}
+
+\subsection{Bài toán Object Detection}
+
+Object Detection xác định đồng thời lớp và vị trí của các đối tượng trong ảnh.
+Đầu ra thường là tập các bounding box $b_i=(x_i,y_i,w_i,h_i)$, nhãn lớp và độ
+tin cậy. Khác với phân loại ảnh, một ảnh có thể chứa nhiều đối tượng và mô hình
+phải giải quyết cả bài toán định vị lẫn phân loại.
+
+Độ chồng lấp giữa hộp dự đoán $A$ và hộp chuẩn $B$ được đo bằng Intersection
+over Union:
+\begin{equation}
+  IoU(A,B)=\frac{|A\cap B|}{|A\cup B|}.
+\end{equation}
+Một dự đoán được xem là đúng khi lớp phù hợp và IoU vượt ngưỡng đánh giá.
+
+\subsection{Kiến trúc YOLO}
+
+YOLO là họ mô hình phát hiện đối tượng một giai đoạn, thực hiện trích xuất đặc
+trưng và dự đoán trong một đồ thị thống nhất \cite{redmon2016,redmon2017}.
+Kiến trúc tổng quát gồm backbone để trích xuất đặc trưng, neck để tổng hợp đặc
+trưng đa tỉ lệ và detection head để dự đoán vị trí, objectness và lớp.
+
+Các biến thể YOLO khác nhau ở block tích chập, cơ chế kết hợp đặc trưng, hàm
+loss và cách biểu diễn detection head. Khi tối ưu, cần bảo toàn những tầng ảnh
+hưởng mạnh đến đầu ra, đồng thời ưu tiên cắt tỉa cấu trúc mà TensorRT có thể khai
+thác thành giảm thời gian thực thi thực tế.
+
+\subsection{Quy trình huấn luyện YOLO}
+
+Quy trình huấn luyện gồm chuẩn hóa nhãn, chia train--validation--test, tăng cường
+dữ liệu, khởi tạo trọng số, tối ưu loss và chọn checkpoint. Mọi thí nghiệm phải
+lưu seed, phiên bản mã nguồn, cấu hình optimizer, learning rate, batch size, image
+size và số epoch để có thể tái lập.
+
+Tập test chỉ được dùng cho đánh giá cuối. Các quyết định về pruning ratio, lịch
+fine-tuning và ngưỡng dừng sớm phải dựa trên tập validation nhằm tránh điều chỉnh
+gián tiếp theo tập test.
+
+\subsection{Các chỉ số đánh giá}
+
+Với $TP$, $FP$ và $FN$ lần lượt là số dự đoán đúng, dương tính giả và âm tính
+giả, Precision và Recall được xác định bởi:
+\begin{equation}
+  Precision=\frac{TP}{TP+FP}, \qquad
+  Recall=\frac{TP}{TP+FN}.
+\end{equation}
+
+Average Precision là diện tích dưới đường Precision--Recall của một lớp. mAP
+là trung bình AP trên các lớp. $mAP@50$ dùng ngưỡng IoU 0,5; $mAP@50{:}95$
+lấy trung bình trên các ngưỡng từ 0,5 đến 0,95 với bước 0,05. Đồ án báo cáo đồng
+thời Precision, Recall, $mAP@50$ và $mAP@50{:}95$ để tránh kết luận dựa trên
+một chỉ số đơn lẻ.

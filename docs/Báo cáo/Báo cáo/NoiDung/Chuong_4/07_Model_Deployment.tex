@@ -1,0 +1,33 @@
+\section{Thiết kế Model Deployment}
+
+Luồng triển khai được mô tả trong Hình~\ref{fig:model-deployment-design}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.48cm]
+  \node[flowbox] (registry) {Model Registry};
+  \node[flowbox, below=of registry] (deployment) {Deployment};
+  \node[flowbox, below=of deployment] (command) {Command};
+  \node[flowbox, below=of command] (agent) {Edge Agent};
+  \node[flowbox, below=of agent] (download) {Download Artifact};
+  \node[flowbox, below=of download] (load) {Load TensorRT Engine};
+  \node[flowbox, below=of load] (runtime) {Runtime};
+  \draw[flowarrow] (registry) -- (deployment);
+  \draw[flowarrow] (deployment) -- (command);
+  \draw[flowarrow] (command) -- (agent);
+  \draw[flowarrow] (agent) -- (download);
+  \draw[flowarrow] (download) -- (load);
+  \draw[flowarrow] (load) -- (runtime);
+\end{tikzpicture}
+\caption{Luồng triển khai model từ Registry đến Runtime}
+\label{fig:model-deployment-design}
+\end{figure}
+
+Trước rollout, Deployment kiểm tra trạng thái released, compatibility, target và
+quyền người dùng. Edge Agent thực hiện stage-and-switch: tải model mới trong khi
+runtime cũ vẫn chạy, xác minh engine, sau đó chuyển active version. Health check
+sau activation quyết định commit hoặc rollback.
+
+Canary deployment chọn một nhóm node đại diện cho từng device class. Sau cửa sổ
+quan sát, hệ thống so sánh error rate, FPS, latency, nhiệt độ và incident với
+baseline. Rollout chỉ tiếp tục khi mọi guardrail đạt yêu cầu.

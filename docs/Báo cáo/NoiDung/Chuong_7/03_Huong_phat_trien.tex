@@ -1,0 +1,41 @@
+\section{Hướng phát triển}
+
+Hướng phát triển được xây dựng từ nền tảng hiện tại như
+Hình~\ref{fig:future-directions}.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.92\textwidth}{!}{%
+\begin{tikzpicture}[node distance=0.65cm and 0.8cm]
+  \node[groupbox, text width=5cm] (current) {\textbf{Hiện tại}\\YOLO26n pruning + QAT\\Cloud--Edge desired state\\Telemetry + Prometheus\\AI Assistant qua MCP};
+  \node[groupbox, right=2cm of current, text width=6cm] (future) {\textbf{Tương lai}\\Canary và rollback tự động\\Cảnh báo sớm bằng ML\\Collector Jetson (tegrastats)\\mTLS, RBAC, phân quyền topic\\Phê duyệt và audit cho Assistant\\RAG trên runbook\\Học liên tục từ dữ liệu biên};
+  \draw[flowarrow] (current) -- (future);
+\end{tikzpicture}}
+\caption{Các hướng phát triển từ kết quả hiện tại}
+\label{fig:future-directions}
+\end{figure}
+
+\textbf{Hoàn thiện đánh giá mô hình.} Chạy đầy đủ pipeline trên tập PPE với
+nhiều seed, khảo sát thêm các tỷ lệ cắt tỉa 20\% và 40\%, mở rộng ngân sách SHO,
+và đo trên Jetson Nano, Jetson Orin Nano theo quy trình ở Mục~6.1.
+
+\textbf{Triển khai theo nhóm và tự động khôi phục.} Mở rộng Deployment từ một
+node sang một nhóm node chọn theo nhãn, với chiến lược canary: triển khai trước
+cho một phần nhỏ, so sánh \texttt{effective\_fps\_ratio}, p95 latency, tỷ lệ lỗi
+với baseline rồi mới mở rộng, và tự động \texttt{update} về model trước khi vượt
+ngưỡng. Bổ sung kiểm tra SHA-256 của model sau khi tải.
+
+\textbf{Cảnh báo sớm bằng học máy.} Sinh dữ liệu tổng hợp theo 11 kịch bản lỗi
+đã đặc tả, huấn luyện Isolation Forest và XGBoost trên đặc trưng cửa sổ trượt,
+đánh giá thời gian cảnh báo trước và tỷ lệ báo động sai, rồi tích hợp risk score
+vào Dashboard và Assistant.
+
+\textbf{Bảo mật.} Bắt buộc TLS cho MQTT, cấp credential riêng cho từng node với
+ACL topic, chuyển từ API key tĩnh sang tài khoản người dùng và RBAC đã có trong
+schema, và ký image runtime.
+
+\textbf{AI Assistant.} Thay xác nhận dựa trên prompt bằng luồng phê duyệt tường
+minh: Assistant tạo kế hoạch hành động, người dùng phê duyệt trên giao diện, hệ
+thống thực thi và ghi nhật ký kiểm toán. Bổ sung RAG trên runbook và tài liệu vận
+hành cho câu hỏi về quy trình, và cho Assistant đọc risk score để chủ động đề xuất
+xử lý trước khi sự cố xảy ra.

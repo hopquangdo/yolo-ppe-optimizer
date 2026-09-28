@@ -1,0 +1,26 @@
+\babel@toc {vietnamese}{}\relax 
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {1.1}{\ignorespaces Vòng đời AI tại Edge được nghiên cứu trong đồ án}}{3}{figure.caption.13}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Pipeline suy luận tại Edge}}{17}{figure.caption.16}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Pipeline kết hợp pruning và QAT}}{27}{figure.caption.19}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Kiến trúc tổng thể nền tảng Edge AI}}{32}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Các thành phần chính của Edge Agent}}{35}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Thiết kế pipeline Edge Runtime}}{36}{figure.caption.24}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Luồng triển khai model từ Registry đến Runtime}}{37}{figure.caption.25}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Kiến trúc xử lý đặc trưng Telemetry và phân loại sự cố kết hợp LLM Agent}}{39}{figure.caption.27}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Luồng truy xuất tri thức của Copilot}}{40}{figure.caption.28}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Các hướng phát triển từ kết quả hiện tại}}{64}{figure.caption.41}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsfinish 

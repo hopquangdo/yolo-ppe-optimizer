@@ -1,0 +1,49 @@
+\section{Kiến trúc tổng thể}
+
+Kiến trúc tổng thể được thể hiện trong Hình~\ref{fig:platform-architecture}. Người
+dùng thao tác qua Dashboard hoặc Copilot. Cloud Control Plane cung cấp các
+domain service và phát command qua message bus. Mỗi Edge Agent quản lý một AI
+Runtime gắn với camera và gửi actual state, metric, event trở lại Cloud.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[node distance=0.65cm and 0.7cm]
+  \node[groupbox] (user) {User};
+  \node[groupbox, below=of user] (copilot) {Dashboard / Copilot};
+  \node[groupbox, below=of copilot, text width=5cm] (control) {Cloud Control Plane};
+
+  \node[flowbox, below left=1cm and 5.2cm of control] (fleet) {Fleet};
+  \node[flowbox, right=of fleet] (model) {Model Registry};
+  \node[flowbox, right=of model] (deployment) {Deployment};
+  \node[flowbox, right=of deployment] (incident) {Incident};
+  \node[flowbox, right=of incident] (knowledge) {Knowledge};
+
+  \node[groupbox, below=1.2cm of deployment, text width=5cm] (bus) {Command / Event / Message Bus};
+  \node[groupbox, below left=1cm and 1.5cm of bus] (edge1) {Edge Agent 01\\AI Runtime\\Camera};
+  \node[groupbox, below right=1cm and 1.5cm of bus] (edge2) {Edge Agent 02\\AI Runtime\\Camera};
+
+  \draw[flowarrow] (user) -- (copilot);
+  \draw[flowarrow] (copilot) -- (control);
+  \draw[flowarrow] (control) -- (fleet);
+  \draw[flowarrow] (control) -- (model);
+  \draw[flowarrow] (control) -- (deployment);
+  \draw[flowarrow] (control) -- (incident);
+  \draw[flowarrow] (control) -- (knowledge);
+  \draw[flowarrow] (fleet) |- (bus);
+  \draw[flowarrow] (model) |- (bus);
+  \draw[flowarrow] (deployment) -- (bus);
+  \draw[flowarrow] (incident) |- (bus);
+  \draw[flowarrow] (bus) -- (edge1);
+  \draw[flowarrow] (bus) -- (edge2);
+  \draw[flowarrow, dashed] (edge1) -- node[left]{telemetry} (bus);
+  \draw[flowarrow, dashed] (edge2) -- node[right]{telemetry} (bus);
+\end{tikzpicture}}
+\caption{Kiến trúc tổng thể nền tảng Edge AI}
+\label{fig:platform-architecture}
+\end{figure}
+
+Control Plane là nguồn sự thật cho desired state; Edge Agent là nguồn sự thật
+cho actual state tức thời. Hai trạng thái không bị đồng nhất: chênh lệch giữa chúng
+là tín hiệu để hệ thống tiếp tục reconcile hoặc tạo incident. Dịch vụ không gọi
+trực tiếp vào nội bộ domain khác mà dùng API/event đã công bố.

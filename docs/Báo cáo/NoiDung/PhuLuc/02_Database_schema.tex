@@ -1,0 +1,50 @@
+\chapter{DATABASE SCHEMA}
+
+Schema PostgreSQL được tạo bởi hai migration trong \path{db/migrations}. Khóa
+chính là UUID sinh bởi \texttt{gen\_random\_uuid()} (extension \texttt{pgcrypto});
+mọi bảng có \texttt{created\_at}, phần lớn có \texttt{updated\_at} cập nhật bằng
+trigger; thuộc tính mở rộng lưu kiểu \texttt{JSONB}.
+
+\begin{longtable}{L{3.3cm}L{5cm}L{6.2cm}}
+\caption{Các bảng nghiệp vụ chính}\label{tab:database-schema}\\
+\toprule
+\textbf{Bảng} & \textbf{Khóa/quan hệ chính} & \textbf{Vai trò}\\
+\midrule\endfirsthead
+\toprule
+\textbf{Bảng} & \textbf{Khóa/quan hệ chính} & \textbf{Vai trò}\\
+\midrule\endhead
+users & id; username, email duy nhất & Người dùng hệ thống\\
+api\_keys & id, user\_id $\rightarrow$ users & Khóa API: chỉ lưu \texttt{key\_hash} và \texttt{key\_prefix}; loại USER, NODE\_AGENT, SERVICE; trạng thái, hạn dùng\\
+clusters & id; name duy nhất & Edge Cluster, trạng thái, vị trí\\
+nodes & id, cluster\_id $\rightarrow$ clusters; (cluster\_id, name) duy nhất & Edge Node: hostname, IP (\texttt{INET}), phiên bản Agent, CPU, RAM, GPU, heartbeat cuối\\
+node\_api\_keys & id, node\_id $\rightarrow$ nodes & Khóa riêng cho Agent, tách khỏi khóa người dùng\\
+models & id & Thông tin model, trạng thái ACTIVE, INACTIVE hoặc DEPRECATED\\
+model\_classes & model\_id $\rightarrow$ models & Danh sách lớp đối tượng của model\\
+runtimes & id, node\_id $\rightarrow$ nodes & AI Runtime: loại, trạng thái, image, model, config, env, giới hạn tài nguyên, container\_id\\
+deployments & id, cluster\_id, node\_id, runtime\_id (không FK) & Desired state (\texttt{spec} JSONB), trạng thái, \texttt{last\_command\_id}, thông điệp\\
+cluster\_logs, node\_logs, runtime\_logs & Khóa ngoại tới tài nguyên tương ứng & Nhật ký sự kiện theo mức DEBUG--CRITICAL\\
+chat\_sessions, chat\_messages & session\_id & Lịch sử hội thoại với vai trò USER, ASSISTANT, SYSTEM, TOOL\\
+\bottomrule
+\end{longtable}
+
+Các kiểu enum (\texttt{node\_status}, \texttt{runtime\_status},
+\texttt{deployment\_status}...) có giá trị trùng khớp với enum Python trong
+\texttt{src/shared/contracts/enums.py}. Chỉ mục được tạo trên các cột lọc thường
+dùng: \texttt{nodes(cluster\_id)}, \texttt{nodes(status)},
+\texttt{nodes(last\_heartbeat\_at)}, \texttt{deployments(node\_id)},
+\texttt{deployments(runtime\_id)}, \texttt{deployments(status)}.
+
+\begin{lstlisting}[caption={Bảng deployments (V002)}]
+CREATE TABLE deployments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cluster_id UUID NOT NULL REFERENCES clusters(id) ON DELETE CASCADE,
+    node_id    UUID NOT NULL REFERENCES nodes(id)    ON DELETE CASCADE,
+    runtime_id UUID NOT NULL,          -- khong FK: giu lich su sau khi runtime bi xoa
+    spec JSONB NOT NULL,
+    status deployment_status NOT NULL DEFAULT 'PENDING',
+    last_command_id VARCHAR(64),
+    message TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+\end{lstlisting}

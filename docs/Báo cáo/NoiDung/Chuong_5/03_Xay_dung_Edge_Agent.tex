@@ -1,0 +1,56 @@
+\section{Xây dựng Edge Agent}
+
+\subsection{Lắp ráp và cấu hình}
+
+\texttt{AgentContainer} lắp ráp Agent từ cấu hình \texttt{AgentSettings} (tiền tố
+biến môi trường \texttt{EDGE\_}). Các lựa chọn quan trọng: \texttt{runtime\_driver}
+(\texttt{docker} hoặc \texttt{fake} để chạy không cần Docker), \texttt{runtime\_network},
+\texttt{image\_pull\_policy}, \texttt{agent\_url\_for\_runtimes} (địa chỉ để container
+runtime gọi ngược về Agent, mặc định \texttt{host.docker.internal:8081}),
+\texttt{state\_dir} lưu desired state và cache model, cùng ba chu kỳ state (10~s),
+telemetry (5~s), reconcile (15~s). Ứng dụng FastAPI của Agent được tạo bởi
+\texttt{AgentAppFactory}: \texttt{lifespan} khởi động AgentService và dừng an
+toàn khi tắt; health check báo trạng thái kết nối broker.
+
+\subsection{Giao tiếp MQTT}
+
+\texttt{EdgePublisher} đóng gói việc publish NodeState (retained), telemetry và
+event lên topic đúng định dạng, dùng \texttt{EdgeTopics} chung. Vì broker có thể
+giao lại thông điệp, tính đúng đắn không dựa vào QoS mà dựa vào idempotency ở
+tầng ứng dụng: chống trùng \texttt{command\_id} và thao tác runtime idempotent.
+Khi Agent tạm mất kết nối, AI Runtime vẫn chạy bình thường vì không phụ thuộc
+Cloud; vòng reconcile tiếp tục bảo đảm container sống; sau khi kết nối lại, bản
+tin NodeState kế tiếp đồng bộ lại trạng thái trên Cloud.
+
+\subsection{Điều khiển container}
+
+\texttt{DockerRuntimeDriver} hiện thực port \texttt{RuntimeDriver} bằng cách gọi
+Docker CLI qua \texttt{asyncio.create\_subprocess\_exec}, hoạt động được cả khi
+Agent chạy trong container có gắn socket. Container được đặt tên
+\texttt{edgeops-<tên>-<8 ký tự đầu runtime\_id>} và gắn nhãn
+\texttt{edgeops.runtime\_id} để tìm lại sau khi Agent khởi động lại. Hàm
+\texttt{inspect} đọc trạng thái chạy, mã thoát, số lần restart, thời điểm khởi
+động và lỗi từ \texttt{docker inspect}. \texttt{FakeRuntimeDriver} mô phỏng cùng
+giao diện trong bộ nhớ, cho phép kiểm thử kịch bản container bị crash.
+
+\subsection{Tải model}
+
+\texttt{HttpArtifactFetcher} tải model theo luồng (stream) với thời gian chờ 300~s,
+ghi vào tệp \texttt{.part} rồi \texttt{os.replace} sang tên đích để một lần tải dở
+dang không bao giờ bị dùng nhầm. Thư mục cache được phân tách theo 16 ký tự đầu
+của SHA-256 URL. Lược đồ URI không hỗ trợ (ví dụ \texttt{s3://}) bị từ chối với
+thông báo yêu cầu dùng URL HTTPS có chữ ký. Việc tải được thực hiện trong bước
+CREATING của runtime nên lỗi tải được báo về Cloud như một deployment thất bại.
+
+\subsection{Thu thập telemetry}
+
+\texttt{PsutilSystemCollector} thu CPU, tải trung bình 1/5 phút, iowait, bộ nhớ,
+swap, nhiệt độ (giá trị lớn nhất của các cảm biến hệ điều hành cung cấp), dung
+lượng đĩa và inode, uptime, số tiến trình. Các chỉ số dạng tốc độ --- số lần chuyển
+ngữ cảnh mỗi giây, tốc độ tăng bộ nhớ (MB/phút), thông lượng đọc/ghi đĩa và
+mạng (MB/s), tốc độ tăng nhiệt (°C/phút) --- được tính từ chênh lệch với lần đo
+trước.
+\texttt{NvidiaSmiGpuCollector} truy vấn \texttt{nvidia-smi} để lấy mức sử dụng,
+bộ nhớ, xung nhịp, công suất và nhiệt độ GPU; các giá trị \texttt{[N/A]} được
+chuyển thành rỗng. \texttt{PsutilNodeInfoProvider} cung cấp hostname, IP, số nhân,
+dung lượng bộ nhớ và tên GPU cho NodeState.

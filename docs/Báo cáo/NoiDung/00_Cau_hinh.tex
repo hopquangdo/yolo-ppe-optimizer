@@ -1,0 +1,132 @@
+% !TEX root = ../DoAn.tex
+% =====================================================================
+%  ĐỒ ÁN TỐT NGHIỆP - Đỗ Quang Hợp
+%  NGHIÊN CỨU VÀ XÂY DỰNG NỀN TẢNG EDGE AI TÍCH HỢP AI AGENT
+%  VÀ TỐI ƯU MÔ HÌNH YOLO
+%  Biên dịch: pdflatex DoAn.tex (chạy 2-3 lần để cập nhật mục lục)
+% =====================================================================
+\documentclass[a4paper,12pt,oneside]{report}
+\usepackage{iftex}
+% Nạp gói nếu máy biên dịch có, bỏ qua nếu thiếu (tránh dừng biên dịch)
+\newcommand{\goiTuyChon}[2][]{\IfFileExists{#2.sty}{\usepackage[#1]{#2}}{%
+  \PackageWarningNoLine{DoAn}{Thieu goi #2, da bo qua}}}
+\IfFileExists{scrextend.sty}{\usepackage{scrextend}\changefontsizes{13pt}}{}
+\ifPDFTeX
+  % pdfLaTeX: tiếng Việt cần gói vntex (T5). Nếu máy thiếu, hãy đổi
+  % Compiler sang XeLaTeX hoặc LuaLaTeX.
+  \IfFileExists{t5enc.def}{%
+    \usepackage[T5]{fontenc}\usepackage[vietnamese]{babel}}{%
+    \usepackage[T1]{fontenc}%
+    \PackageWarningNoLine{DoAn}{Thieu vntex: hay bien dich bang XeLaTeX}}
+  \usepackage[utf8]{inputenc}
+  \usepackage{mathptmx}               % Times New Roman
+\else
+  % XeLaTeX/LuaLaTeX: dùng font Unicode, không cần T5
+  \usepackage{fontspec}
+  \IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{%
+    \IfFontExistsTF{TeX Gyre Termes}{\setmainfont{TeX Gyre Termes}}{}}
+  \usepackage{babel}
+  \babelprovide[import,main]{vietnamese}
+\fi
+\usepackage[top=2cm, bottom=2cm, left=3cm, right=2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{array,tabularx,longtable}
+\IfFileExists{booktabs.sty}{\usepackage{booktabs}}{%
+  \providecommand{\toprule}{\hline}\providecommand{\midrule}{\hline}%
+  \providecommand{\bottomrule}{\hline}\providecommand{\cmidrule}[1]{}}
+\goiTuyChon{multirow}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{pdflscape}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,shapes.misc}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+
+\hypersetup{pdftitle={Nghiên cứu và xây dựng nền tảng Edge AI tích hợp AI Agent và tối ưu mô hình YOLO},
+            pdfauthor={Đỗ Quang Hợp}}
+
+% ---------------------------------------------------------------------
+% Định dạng chung
+% ---------------------------------------------------------------------
+\onehalfspacing
+\setlength{\parindent}{1cm}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{3em}
+% Cho phép ngắt dòng sau dấu gạch dưới và dấu chấm trong định danh dài (\texttt{a\_b\_c})
+\AtBeginDocument{\let\oldunderscore\_\renewcommand{\_}{\oldunderscore\hspace{0pt}}}
+\newcommand{\brk}{\hspace{0pt}}
+\setlist{nosep,leftmargin=*}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\captionsetup{font=small,labelsep=colon}
+\captionsetup[table]{name=Bảng}
+\captionsetup[figure]{name=Hình}
+\renewcommand{\lstlistingname}{Listing}
+
+% Đánh số: CHƯƠNG 1, mục 1.1, bảng 1.1, công thức (1.1)
+\renewcommand{\thechapter}{\arabic{chapter}}
+\renewcommand{\thesection}{\arabic{chapter}.\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thetable}{\arabic{chapter}.\arabic{table}}
+\renewcommand{\thefigure}{\arabic{chapter}.\arabic{figure}}
+\renewcommand{\theequation}{\arabic{chapter}.\arabic{equation}}
+\AtBeginDocument{\renewcommand{\thelstlisting}{\arabic{chapter}.\arabic{lstlisting}}%
+  \counterwithin*{lstlisting}{chapter}}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\titleformat{\chapter}[hang]{\centering\bfseries\Large}{CHƯƠNG \thechapter.\ }{0pt}{}
+\titlespacing*{\chapter}{0pt}{-20pt}{18pt}
+\titleformat{\section}[hang]{\bfseries\large}{\thesection}{1em}{}
+\titleformat{\subsection}[hang]{\bfseries\itshape}{\thesubsection}{1em}{}
+
+\titlecontents{chapter}[0cm]{\bfseries\vspace{0.25cm}}
+    {\contentslabel[\thecontentslabel]{1.2cm}}{}{\hfill\contentspage}
+\titlecontents{section}[1.2cm]{\vspace{0.1cm}}
+    {\contentslabel{1.0cm}}{}{\titlerule*[0.4pc]{.}\contentspage}
+\titlecontents{subsection}[2.2cm]{}
+    {\contentslabel{1.2cm}}{}{\titlerule*[0.4pc]{.}\contentspage}
+
+% Chương không đánh số (Mở đầu, Kết luận, ...) vẫn vào mục lục
+\newcommand{\unnumchapter}[1]{%
+  \chapter*{#1}\phantomsection\addcontentsline{toc}{chapter}{#1}\markboth{#1}{#1}}
+
+% Header/footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyfoot[R]{\thepage}
+\setlength{\headheight}{17pt}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\chaptermark}[1]{\markboth{CHƯƠNG \thechapter. #1}{}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[R]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% Ô dữ liệu cần bổ sung
+\newcommand{\cbs}[1]{[CẦN BỔ SUNG: #1]}
+
+% Listings
+\lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single,
+        columns=fullflexible, keepspaces=true, showstringspaces=false,
+        captionpos=t, xleftmargin=0.5cm, xrightmargin=0.5cm}
+
+% Kiểu dùng chung cho các sơ đồ luồng
+\tikzset{
+  flowbox/.style={draw, rounded corners, align=center, minimum height=0.9cm,
+                  text width=2.5cm, font=\small, fill=blue!4},
+  flowarrow/.style={-{Latex[length=2mm]}, thick},
+  groupbox/.style={draw, rounded corners, align=center, minimum height=1cm,
+                   text width=3cm, font=\small, fill=gray!8}
+}

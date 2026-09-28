@@ -1,0 +1,36 @@
+% ---------------------------------------------------------------------
+% TÓM TẮT
+% ---------------------------------------------------------------------
+\thispagestyle{empty}
+\begin{center}{\Large\bfseries TÓM TẮT}\end{center}
+
+\noindent\textbf{Tên đề tài:} NGHIÊN CỨU VÀ XÂY DỰNG NỀN TẢNG EDGE AI TÍCH HỢP
+AI AGENT VÀ TỐI ƯU MÔ HÌNH YOLO
+
+\noindent\textbf{Sinh viên thực hiện:} Đỗ Quang Hợp
+
+\noindent\textbf{Mã SV:} 68CNCS \hspace{3cm} \textbf{Lớp:} 68CS2
+
+Đồ án nghiên cứu đồng thời hai vấn đề: tối ưu mô hình YOLO cho thiết bị Edge AI
+và xây dựng nền tảng quản lý vòng đời AI trên một đội thiết bị phân tán. Ở phần
+mô hình, đồ án xây dựng YOLO baseline, khảo sát structured pruning với nhiều tỷ
+lệ, Quantization-Aware Training và pipeline kết hợp pruning--fine-tuning--QAT.
+Các checkpoint được chuyển đổi sang ONNX và TensorRT ở các chế độ FP16, INT8,
+sau đó đánh giá trên Jetson Nano và Jetson Orin Nano theo độ chính xác, latency,
+FPS, kích thước model, GPU memory, power và nhiệt độ.
+
+Ở phần nền tảng, đồ án tổ chức hệ thống theo kiến trúc Cloud Control Plane--Edge
+Agent--Edge Runtime. Control Plane cung cấp Fleet Management, Model Registry,
+Deployment, Command, Monitoring, Incident và Knowledge; Edge Agent thực hiện
+đồng bộ desired state, tải và kiểm tra artifact, điều khiển runtime, thu telemetry
+và rollback khi triển khai thất bại. AI Copilot kết hợp RAG với tool calling/MCP
+để truy vấn tài liệu và trạng thái vận hành. Các hành động thay đổi hệ thống phải
+được kiểm tra quyền, lập kế hoạch, phê duyệt và ghi audit.
+
+Giải pháp được đánh giá bằng một kịch bản xuyên suốt từ huấn luyện, tối ưu,
+đóng gói và phát hành model đến triển khai trên hai lớp Jetson, theo dõi suy giảm
+FPS, tạo incident, phân tích bằng Copilot và rollback. Kết quả định lượng cuối
+cùng được để ở trạng thái cần bổ sung cho đến khi hoàn thành phép đo trên thiết
+bị thực tế. Đóng góp của đồ án là kết nối nghiên cứu tối ưu YOLO với cơ chế vận
+hành model có phiên bản, có khả năng quan sát, khôi phục và hỗ trợ ra quyết định.
+\newpage

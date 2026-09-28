@@ -1,0 +1,29 @@
+\section{Chuyển đổi sang TensorRT}
+
+\subsection{Export ONNX}
+
+Mỗi checkpoint ứng viên được export sang ONNX với đầu vào tĩnh
+$1\times3\times640\times640$ (batch 1, phù hợp xử lý luồng camera từng khung)
+bằng chức năng export của Ultralytics. ONNX checker xác nhận đồ thị hợp lệ; suy
+luận đối chiếu giữa PyTorch và ONNX Runtime trên một tập ảnh cố định đo sai khác
+tensor đầu ra và sai khác detection cuối. YOLO26 có head end-to-end không cần NMS
+nên đồ thị ONNX không chứa bước NMS phụ thuộc dữ liệu, giúp chuyển đổi TensorRT
+thuận lợi.
+
+\subsection{TensorRT FP16 và INT8}
+
+Engine được build \emph{trên chính thiết bị đích} vì engine TensorRT gắn với
+kiến trúc GPU và phiên bản TensorRT: engine tạo trên Jetson Nano (TensorRT 8.2)
+không chạy trên Jetson Orin Nano và ngược lại. Engine FP16 được tạo từ baseline và
+các mô hình đã cắt tỉa. Engine INT8 được tạo từ ONNX Q/DQ của mô hình QAT; vì
+thang lượng tử đã có trong đồ thị nên không cần tập hiệu chỉnh bổ sung. Log build
+ghi lại phiên bản TensorRT, workspace và precision thực tế của từng lớp để xác định
+tỷ lệ phép toán thực sự chạy INT8.
+
+\subsection{Kiểm tra độ chính xác sau chuyển đổi}
+
+Kiểm tra gồm ba mức: sai khác tensor trên mẫu cố định, sai khác detection theo
+IoU và confidence, và chênh lệch $mAP$ trên toàn tập test. Artifact vi phạm ràng
+buộc độ chính xác ở Mục~3.1 bị loại dù latency tốt. Engine đạt yêu cầu được đẩy
+lên kho model và triển khai qua nền tảng; AI Runtime nạp trực tiếp tệp
+\texttt{.engine} bằng Ultralytics.

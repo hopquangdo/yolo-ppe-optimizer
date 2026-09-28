@@ -1,0 +1,49 @@
+\chapter{CẤU TRÚC SOURCE CODE}
+
+Mã nguồn gồm hai repository: repository tối ưu mô hình (bản mở rộng của
+Ultralytics) và repository nền tảng (gắn vào repository thứ nhất dưới dạng
+submodule \texttt{app/}).
+
+\begin{lstlisting}[caption={Cấu trúc repository tối ưu mô hình}]
+yolo-ppe-optimizer/
+|-- optimization/          sho.py (Sea-Horse Optimizer), objective.py (1 - mAP50-95)
+|-- scripts/               sho_search.py, train_sparsity.py, prune.py,
+|                          finetune.py, distill.py, qat.py, val_pruned.py
+|-- ultralytics/
+|   |-- nn/modules/        block_pruned.py, head_pruned.py
+|   |-- nn/tasks_pruned.py DetectionModelPruned
+|   |-- cfg/models/26/     yolo26-pruned.yaml
+|   |-- models/yolo/detect/distill_trainer.py   CWD + cls/reg KD
+|   `-- qat/nvidia_tensorrt/                    QATTrainerYolo26, quant ops
+|-- notebooks/             yolo26_ppe_train_pipeline.ipynb
+|-- dataset/               ppe-custom.yaml, du lieu thu thap
+`-- app/                   (submodule) nen tang Edge AI
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Cấu trúc repository nền tảng Edge AI}]
+app/
+|-- apps/                         diem khoi chay
+|   |-- cloud/                    main.py (REST + WS + MCP + worker)
+|   |   |-- https/router/v1/      cluster, node, agent, runtime, deployment, monitoring
+|   |   |-- mcp_server/tools/     fleet_tools, deployment_tools, monitoring_tools
+|   |   |-- ws/                   realtime_router
+|   |   `-- worker/               MQTT consumer tach rieng
+|   |-- edge/edge-agent/          Edge Agent API :8081
+|   |-- edge/edge-runtime/        entrypoint container AI Runtime
+|   |-- assistant/                AI Assistant API :8100 (chat, SSE)
+|   `-- dashboard/                React + Vite + Tailwind, nginx.conf
+|-- src/                          nghiep vu
+|   |-- shared/contracts/         commands, state, telemetry, events, topics, enums
+|   |-- cloud/{domain,application,infrastructure}/
+|   |-- edge/{domain,application,infrastructure}/
+|   `-- assistant/agents/         chat_graph, nodes/, prompts/, tool_runner
+|-- packages/                     messaging (MQTT), http, observability, ultralytics
+|-- db/migrations/                V001__init.sql, V002__deployments.sql
+|-- infra/
+|   |-- compose/{cloud,edge,assistant,web}/
+|   |-- docker/{cloud,edge,assistant}/
+|   `-- config/                   mosquitto.conf, monitoring/ (prometheus, alerts, grafana)
+|-- docs/                         architecture, api, design/telemetry-features.md
+|-- tests/                        18 kiem thu pytest
+`-- .github/workflows/            ci, ci-edge, deploy-cloud, deploy-assistant, deploy-web
+\end{lstlisting}

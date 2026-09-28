@@ -1,0 +1,33 @@
+\section{Bài toán tối ưu}
+
+\subsection{Mô hình baseline}
+
+Mô hình baseline là checkpoint YOLO được huấn luyện theo cấu hình chuẩn trên tập
+dữ liệu mục tiêu và suy luận ở FP32. Baseline cung cấp mốc chất lượng, kích thước
+và hiệu năng để đánh giá mọi biến thể sau đó. Tên kiến trúc, phiên bản framework,
+trọng số khởi tạo và cấu hình huấn luyện phải được cố định trong manifest thí
+nghiệm.
+
+\subsection{Hạn chế của mô hình baseline}
+
+Baseline ưu tiên khả năng huấn luyện và chất lượng, chưa được tối ưu riêng cho
+Jetson. Các hạn chế có thể gồm kích thước trọng số lớn, nhiều phép tính, latency
+cao, GPU memory lớn và FPS chưa đạt yêu cầu. Mức độ hạn chế được xác nhận bằng
+số đo trên cả Jetson Nano và Jetson Orin Nano thay vì suy luận chỉ từ FLOPs.
+
+\subsection{Mục tiêu tối ưu}
+
+Đồ án tối ưu đồng thời sáu tiêu chí: Accuracy, Latency, FPS, Model Size, GPU
+Memory và Power. Bài toán được biểu diễn dưới dạng:
+\begin{equation}
+  \min_{m\in\mathcal{M}}
+  \bigl(-A(m),\ L(m),\ -F(m),\ S(m),\ G(m),\ P(m)\bigr),
+\end{equation}
+trong đó $m$ là một cấu hình model, $A$ là accuracy, $L$ là latency, $F$ là FPS,
+$S$ là kích thước, $G$ là GPU memory và $P$ là công suất. Thay vì gộp tùy ý
+thành một điểm duy nhất, đồ án ưu tiên phân tích tập nghiệm Pareto và các ràng
+buộc tối thiểu của ứng dụng.
+
+Một cấu hình chỉ được xem là ứng viên triển khai khi mức giảm $mAP@50{:}95$
+không vượt \cbs{ngưỡng chấp nhận}, latency đầu cuối không vượt \cbs{ngưỡng
+thời gian thực} và thiết bị hoạt động ổn định trong bài đo kéo dài.

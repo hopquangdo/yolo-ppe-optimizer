@@ -1,0 +1,31 @@
+\chapter{CẤU TRÚC SOURCE CODE}
+
+Phụ lục này mô tả cấu trúc mã nguồn tham chiếu. Cây thư mục cần được cập nhật
+theo repository thực tế trước khi nộp.
+
+\begin{lstlisting}[caption={Cấu trúc mã nguồn tổng quát}]
+project/
+|-- cloud/
+|   |-- fleet/
+|   |-- model_registry/
+|   |-- deployment/
+|   |-- command/
+|   |-- incident/
+|   |-- knowledge/
+|   `-- copilot/
+|-- edge/
+|   |-- agent/
+|   `-- runtime/
+|-- model_optimization/
+|   |-- training/
+|   |-- pruning/
+|   |-- qat/
+|   `-- tensorrt/
+|-- web/
+|-- deployment/
+`-- tests/
+\end{lstlisting}
+
+Mỗi module domain tách lớp domain, application, infrastructure và interface nếu
+mã nguồn thực tế áp dụng kiến trúc này. Những thư mục chỉ mang tính minh họa phải
+được thay bằng đường dẫn và mô tả chính xác của dự án.

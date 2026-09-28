@@ -1,0 +1,25 @@
+\chapter{BENCHMARK CONFIGURATION}
+
+\begin{table}[H]
+\centering
+\caption{Cấu hình tối thiểu của một lần benchmark}
+\label{tab:benchmark-config}
+\begin{tabularx}{\textwidth}{L{5cm}Y}
+\toprule
+\textbf{Tham số} & \textbf{Giá trị cần lưu}\\
+\midrule
+Device identity & Model thiết bị, serial ẩn danh, RAM, storage\\
+Software & OS, JetPack, CUDA, cuDNN, TensorRT, driver\\
+Power/thermal & Power mode, clock, fan, nhiệt độ môi trường\\
+Model & Version, checksum, precision, input shape\\
+Input & Dataset/video/camera, độ phân giải, FPS nguồn\\
+Runtime & Batch, queue size, threshold, NMS\\
+Protocol & Warm-up, số vòng, thời gian chạy, số lần lặp\\
+Metrics & Median, p90, p95, FPS, memory, GPU, power, temperature\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Script benchmark phải ghi kết quả thô ở định dạng có cấu trúc và tách bước thu
+thập khỏi bước tạo bảng/biểu đồ. Mọi lần loại bỏ outlier cần nêu quy tắc trước,
+không xóa mẫu chỉ vì kết quả không thuận lợi.

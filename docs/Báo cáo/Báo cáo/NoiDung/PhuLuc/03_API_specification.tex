@@ -1,0 +1,28 @@
+\chapter{API SPECIFICATION}
+
+\begin{longtable}{L{2.2cm}L{5cm}L{7.2cm}}
+\caption{Nhóm API tham chiếu}\label{tab:api-specification}\\
+\toprule
+\textbf{Method} & \textbf{Endpoint} & \textbf{Mục đích}\\
+\midrule\endfirsthead
+\toprule
+\textbf{Method} & \textbf{Endpoint} & \textbf{Mục đích}\\
+\midrule\endhead
+GET & \path{/api/nodes} & Truy vấn Fleet theo trạng thái, label và device class.\\
+GET & \path{/api/nodes/:id} & Xem capability, actual state và model đang chạy.\\
+POST & \path{/api/models} & Tạo model logic.\\
+POST & \path{/api/models/:id/versions} & Tạo model version và upload session.\\
+POST & \path{/api/model-versions/:id/release} & Phát hành phiên bản đã validation.\\
+POST & \path{/api/deployments} & Tạo kế hoạch deployment.\\
+POST & \path{/api/deployments/:id/start} & Bắt đầu rollout đã được phê duyệt.\\
+POST & \path{/api/deployments/:id/rollback} & Tạo rollback cho deployment.\\
+GET & \path{/api/incidents} & Truy vấn incident.\\
+POST & \path{/api/incidents/:id/resolve} & Đóng incident theo quyền.\\
+POST & \path{/api/knowledge/search} & Hybrid search tài liệu.\\
+POST & \path{/api/copilot/messages} & Gửi message và nhận tool/citation.\\
+POST & \path{/api/copilot/plans/:id/approve} & Phê duyệt kế hoạch hành động.\\
+\bottomrule
+\end{longtable}
+
+Đặc tả hoàn chỉnh cần kèm OpenAPI sinh từ mã nguồn, schema request/response,
+error code, authentication và ví dụ cho từng endpoint.

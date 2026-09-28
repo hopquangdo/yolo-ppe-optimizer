@@ -1,0 +1,34 @@
+\section{Xây dựng hệ thống giám sát}
+
+\subsection{Telemetry ứng dụng}
+
+Luồng telemetry ứng dụng đã được hiện thực đầy đủ từ đầu đến cuối: AI Runtime
+đo và gửi \texttt{RuntimeTelemetry} tới Agent; Agent làm giàu và publish cùng
+\texttt{SystemTelemetry}, \texttt{GpuTelemetry}; Cloud kiểm tra schema và lưu
+vào Redis (mẫu mới nhất theo loại và lịch sử 720 mẫu mỗi loại); REST API, công cụ
+MCP và WebSocket đọc từ đó. Sự kiện runtime, lỗi và kết quả deployment được lưu
+vào bảng nhật ký node trong PostgreSQL. Nhờ chung đặc tả, cùng một dữ liệu được
+Dashboard vẽ biểu đồ và được Assistant dùng để trả lời.
+
+\subsection{Metric hạ tầng}
+
+Cấu hình Prometheus agent tại Edge được sinh trực tiếp trong tệp Compose từ biến
+môi trường (\texttt{EDGE\_NODE\_ID}, \texttt{EDGE\_CLUSTER\_ID}, URL và mật khẩu
+đẩy metric), vì Prometheus không tự đọc biến môi trường trong tệp cấu hình. Các
+exporter dùng \texttt{network\_mode: host} và chỉ lắng nghe trên loopback; exporter
+GPU được bật bằng profile \texttt{nvidia} trên node có GPU rời. Prometheus Cloud
+bật \texttt{--web.enable-remote-write-receiver} và yêu cầu basic auth cho đường
+nhận metric. Luật cảnh báo được nạp từ \path{infra/config/monitoring/alerts},
+Alertmanager định tuyến theo nhãn \texttt{severity}, và Grafana được cấp datasource,
+dashboard tự động qua thư mục provisioning, bật \texttt{allow\_embedding} để nhúng
+vào Dashboard.
+
+\subsection{Dữ liệu cho cảnh báo sớm}
+
+Đặc tả telemetry trong \path{docs/design/telemetry-features.md} đồng thời là hợp
+đồng cho bộ mô phỏng dữ liệu tổng hợp. Mỗi bản ghi huấn luyện gồm các trường
+telemetry và nhãn \texttt{state}, \texttt{future\_degradation}, \texttt{scenario}
+(ví dụ \texttt{thermal\_degradation}). Mười một kịch bản lỗi được liệt kê cùng
+nhóm đặc trưng chính để sinh dữ liệu: quá tải CPU, rò rỉ bộ nhớ, quá tải GPU, giảm
+xung do nhiệt, áp lực điện, đầy đĩa, suy giảm mạng, suy giảm camera, lỗi worker
+suy luận, trôi dữ liệu/model và mất node.

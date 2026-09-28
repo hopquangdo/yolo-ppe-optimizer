@@ -1,0 +1,21 @@
+% =====================================================================
+% PHỤ LỤC
+% =====================================================================
+\appendix
+\renewcommand{\thechapter}{\Alph{chapter}}
+\renewcommand{\thesection}{\Alph{chapter}.\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thetable}{\Alph{chapter}.\arabic{table}}
+\renewcommand{\thefigure}{\Alph{chapter}.\arabic{figure}}
+\renewcommand{\theequation}{\Alph{chapter}.\arabic{equation}}
+\renewcommand{\thelstlisting}{\Alph{chapter}.\arabic{lstlisting}}
+\titleformat{\chapter}[hang]{\centering\bfseries\Large}{PHỤ LỤC \thechapter.\ }{0pt}{}
+\renewcommand{\chaptermark}[1]{\markboth{PHỤ LỤC \thechapter. #1}{}}
+
+\input{NoiDung/PhuLuc/01_Cau_truc_source_code}
+\input{NoiDung/PhuLuc/02_Database_schema}
+\input{NoiDung/PhuLuc/03_API_specification}
+\input{NoiDung/PhuLuc/04_MCP_tool_specification}
+\input{NoiDung/PhuLuc/05_Model_training_configuration}
+\input{NoiDung/PhuLuc/06_Benchmark_configuration}
+\input{NoiDung/PhuLuc/07_Deployment_configuration}

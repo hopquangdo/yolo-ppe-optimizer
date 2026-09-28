@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(xelatex -interaction=nonstopmode -halt-on-error DoAn.tex)"
+    ]
+  }
+}

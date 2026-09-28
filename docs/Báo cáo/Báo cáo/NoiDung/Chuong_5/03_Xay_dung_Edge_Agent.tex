@@ -1,0 +1,43 @@
+\section{Xây dựng Edge Agent}
+
+\subsection{MQTT Communication}
+
+Edge Agent kết nối broker bằng MQTT qua TLS, subscribe topic command riêng của
+node và publish acknowledgement, result, heartbeat, event. Client id gắn với node
+identity; quyền topic giới hạn để node không đọc lệnh hoặc giả mạo telemetry của
+node khác.
+
+Agent dùng backoff có jitter khi kết nối lại. Session và QoS được cấu hình theo
+mức đảm bảo cần thiết; idempotency tại ứng dụng vẫn bắt buộc vì broker có thể
+giao lại message.
+
+\subsection{Command Handler}
+
+Command Handler giải mã message, kiểm tra schema, deadline và command id trong
+local store. Lệnh mới được ghi trạng thái accepted trước khi chuyển cho handler
+chuyên biệt. Kết quả gồm status, reason code, message và output có cấu trúc.
+
+Handler không chạy thao tác dài trên luồng nhận MQTT. Công việc được đưa vào
+worker queue có giới hạn; các lệnh xung đột trên cùng runtime hoặc model được
+serialize để tránh race condition.
+
+\subsection{Model Downloader}
+
+Model Downloader tải artifact vào vùng staging, hỗ trợ timeout, retry và
+\cbs{resume nếu đã hiện thực}. Sau khi tải, module kiểm tra kích thước, SHA-256,
+manifest và dung lượng đĩa. Tệp không hợp lệ bị xóa khỏi staging và không ảnh
+hưởng model đang active.
+
+\subsection{Runtime Manager}
+
+Runtime Manager xây dựng command line hoặc container spec từ cấu hình đã
+validate, khởi động tiến trình và theo dõi health endpoint/IPC. PID, runtime id,
+model version và thời điểm start được ghi vào local state. Khi Agent khởi động
+lại, module reconcile local state với tiến trình thực tế.
+
+\subsection{Telemetry Collector}
+
+Telemetry Collector đọc chỉ số hệ thống từ \cbs{nguồn như tegrastats/system API}
+và metric do Runtime phát. Dữ liệu được gom batch để giảm overhead. Khi mất mạng,
+event và state report được ghi vào queue bền vững; metric cũ có thể được downsample
+hoặc loại bỏ theo chính sách dung lượng.

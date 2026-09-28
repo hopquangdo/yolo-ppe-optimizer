@@ -1,0 +1,72 @@
+\section{Đặt vấn đề}
+\label{sec:dat-van-de}
+
+\subsection{Sự phát triển của AI tại Edge}
+
+Các hệ thống thị giác máy tính trước đây thường truyền dữ liệu từ camera về
+máy chủ hoặc trung tâm dữ liệu để xử lý. Cách tiếp cận này thuận tiện cho việc
+tập trung tài nguyên nhưng tạo ra độ trễ truyền thông, tiêu thụ băng thông và làm
+tăng rủi ro lộ dữ liệu. Edge AI đưa mô hình suy luận đến gần nguồn sinh dữ liệu,
+cho phép thiết bị phản hồi ngay cả khi kết nối mạng không ổn định và chỉ gửi về
+đám mây các kết quả đã được chọn lọc.
+
+Sự phổ biến của GPU nhúng, NPU và các bộ thực thi tối ưu đã mở rộng phạm vi ứng
+dụng Edge AI trong giám sát an toàn, giao thông, nông nghiệp, bán lẻ và tự động
+hóa công nghiệp. Trong các ứng dụng này, mô hình phát hiện đối tượng thuộc họ
+YOLO phù hợp nhờ khả năng xử lý một giai đoạn và cân bằng tương đối tốt giữa độ
+chính xác với tốc độ \cite{redmon2016,bochkovskiy2020}. Tuy nhiên, một mô hình
+chạy được trên máy trạm chưa đồng nghĩa với việc có thể vận hành ổn định trên
+thiết bị biên.
+
+\subsection{Hạn chế của triển khai AI trên Edge Device}
+
+Thiết bị biên bị giới hạn đồng thời bởi nhiều loại tài nguyên. Các giới hạn này
+có quan hệ với nhau và phải được xem xét trên toàn bộ chuỗi suy luận thay vì chỉ
+đo thời gian thực thi của riêng mạng nơ-ron.
+
+\begin{itemize}
+  \item \textbf{Tài nguyên GPU:} số nhân xử lý và thông lượng tính toán thấp hơn
+        máy chủ, trong khi GPU còn có thể được chia sẻ cho giải mã video, hiển
+        thị và các tác vụ khác.
+  \item \textbf{Bộ nhớ:} dung lượng RAM và bộ nhớ GPU giới hạn kích thước mô
+        hình, batch size, số luồng camera và lượng bộ đệm có thể duy trì.
+  \item \textbf{Điện năng:} thiết bị thường hoạt động theo power mode cố định;
+        tăng xung nhịp có thể cải thiện FPS nhưng làm tăng công suất tiêu thụ.
+  \item \textbf{Nhiệt độ:} tải suy luận kéo dài có thể làm thiết bị giảm xung để
+        bảo vệ phần cứng, khiến hiệu năng thực tế thấp hơn phép đo ngắn hạn.
+  \item \textbf{Yêu cầu thời gian thực:} hệ thống phải kiểm soát cả độ trễ trung
+        bình, độ trễ phần vị cao và độ trễ đầu cuối từ camera đến kết quả.
+\end{itemize}
+
+Vì vậy, bài toán triển khai cần tối ưu đồng thời độ chính xác, tốc độ, kích thước
+mô hình, bộ nhớ và điện năng. Mọi so sánh phải được thực hiện trên cùng dữ liệu,
+cùng kích thước đầu vào, cùng thiết bị và cùng quy trình đo.
+
+\subsection{Bài toán quản lý và triển khai AI Model trên nhiều Edge Device}
+
+Khi số lượng thiết bị tăng, việc sao chép thủ công tệp mô hình và khởi động tiến
+trình qua từng phiên SSH không còn phù hợp. Người vận hành cần biết thiết bị nào
+đang trực tuyến, phiên bản mô hình đang chạy, cấu hình mong muốn, trạng thái
+thực tế và lịch sử thay đổi. Một lỗi triển khai phải được phát hiện, khoanh vùng và
+khôi phục mà không làm gián đoạn toàn bộ đội thiết bị.
+
+Bài toán vì thế bao gồm cả mặt phẳng dữ liệu tại Edge và mặt phẳng điều khiển
+trên Cloud. Cloud Control Plane quản lý thiết bị, runtime, deployment, lệnh điều
+khiển và dữ liệu giám sát. Edge Agent tiếp nhận desired state, tải model, điều khiển
+AI Runtime và báo cáo trạng thái, telemetry. Mỗi thao tác phải có định danh, trạng
+thái và lịch sử để có thể truy nguyên khi xảy ra sự cố.
+
+\subsection{Sự cần thiết của tối ưu mô hình AI}
+
+Mua phần cứng mạnh hơn chỉ giải quyết một phần vấn đề và làm tăng chi phí khi
+quy mô đội thiết bị mở rộng. Tối ưu mô hình giúp khai thác hiệu quả tài nguyên
+hiện có, tăng số luồng camera có thể phục vụ và giảm thời gian phản hồi. Trong đồ
+án này, pruning được dùng để loại bỏ phần tham số hoặc cấu trúc ít quan trọng;
+Quantization-Aware Training (QAT) giúp mô hình thích nghi với sai số lượng tử;
+TensorRT chuyển đổi đồ thị sang engine tối ưu cho GPU NVIDIA.
+
+Tối ưu chỉ có ý nghĩa khi mức giảm chi phí suy luận không làm chất lượng nhận
+diện suy giảm vượt ngưỡng chấp nhận. Do đó, đồ án không tìm mô hình nhỏ nhất
+hoặc nhanh nhất một cách độc lập mà tìm cấu hình có trade-off phù hợp giữa
+accuracy, latency, FPS, model size, GPU memory và power trên Jetson Nano và
+Jetson Orin Nano.

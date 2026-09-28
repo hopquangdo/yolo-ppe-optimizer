@@ -1,0 +1,122 @@
+\section{Thiết kế Cloud Control Plane}
+\label{sec:cloud-design}
+
+Cloud Control Plane gồm các application service xử lý yêu cầu đồng bộ từ người
+dùng và các handler xử lý thông điệp bất đồng bộ từ Edge
+(Hình~\ref{fig:cloud-components}).
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\small,
+  b/.style={draw, rounded corners, align=center, minimum height=0.9cm, text width=3.3cm, fill=blue!5},
+  h/.style={draw, rounded corners, align=center, minimum height=1.0cm, text width=3.3cm, fill=orange!8},
+  r/.style={draw, align=center, minimum height=0.9cm, fill=gray!8},
+  lbl/.style={font=\scriptsize, fill=white, inner sep=1.5pt}]
+  % Tầng vào
+  \node[b, fill=green!6, text width=16cm] (entry) at (6,3.2) {REST Router \qquad | \qquad WebSocket Router \qquad | \qquad MCP Tools};
+  % Application service
+  \node[b] (fleet) at (0,1.6) {FleetService};
+  \node[b] (deploy) at (4,1.6) {DeploymentService};
+  \node[b] (monitor) at (8,1.6) {MonitoringService};
+  \node[b] (realtime) at (12,1.6) {RealtimeService};
+  % MQTT
+  \node[r, fill=purple!6, text width=15.6cm] (mqtt) at (6,-0.2) {MQTT Broker};
+  % Handler
+  \node[h] (state) at (0,-2.0) {NodeStateHandler};
+  \node[h] (devt) at (4,-2.0) {DeploymentEvent\\Handler};
+  \node[h] (tele) at (8,-2.0) {TelemetryHandler};
+  \node[h] (evt) at (12,-2.0) {EdgeEventHandler};
+  \node[h, fill=red!6, text width=3.7cm] (live) at (-4.2,-2.0) {NodeLiveness\\Service (quét 10 s)};
+  % Lưu trữ
+  \node[r, text width=10cm] (pg) at (2,-4.0) {PostgreSQL: clusters, nodes, runtimes, deployments, node\_logs};
+  \node[r, text width=3.3cm] (redis) at (10,-4.0) {Redis: telemetry};
+
+  \foreach \n in {fleet, deploy, monitor, realtime} \draw[flowarrow] (entry.south -| \n) -- (\n);
+  \draw[flowarrow] (deploy) -- node[lbl, right]{CommandGateway: publish lệnh} (deploy |- mqtt.north);
+  \draw[flowarrow, <-] (realtime) -- node[lbl, right]{edge/\#} (realtime |- mqtt.north);
+  \foreach \n in {state, devt, tele, evt} \draw[flowarrow] (\n |- mqtt.south) -- (\n);
+  \draw[flowarrow, dashed] (state) -- (state |- pg.north);
+  \draw[flowarrow, dashed] (devt) -- (devt |- pg.north);
+  \draw[flowarrow, dashed] (evt.south) -- ++(0,-0.5) -| ([xshift=2.5cm]pg.north);
+  \draw[flowarrow, dashed] (tele) -- (tele |- redis.north);
+  \draw[flowarrow, dashed] (live) |- (pg.west);
+  \draw[flowarrow, dashed] (fleet.west) -| ([xshift=-0.3cm]live.north);
+\end{tikzpicture}}
+\caption{Các thành phần của Cloud Control Plane}
+\label{fig:cloud-components}
+\end{figure}
+
+\subsection{Fleet Service}
+
+FleetService hiện thực các use case trên phân cấp Cluster $\rightarrow$ Node
+$\rightarrow$ Runtime: tạo cluster (từ chối tên trùng), đăng ký node vào cluster
+(từ chối tên trùng trong cùng cluster), liệt kê và tra cứu. Node được đăng ký
+trước trên Cloud; khi Agent với \texttt{node\_id} tương ứng bắt đầu gửi
+NodeState, Cloud cập nhật thông tin phần cứng. Bản tin NodeState từ node chưa
+đăng ký bị ghi log và bỏ qua, tránh việc thiết bị lạ tự chen vào hệ thống.
+
+\subsection{Deployment Service}
+
+DeploymentService ghi desired state rồi phát lệnh; kết quả được Edge báo về bất
+đồng bộ. Do đó các API tạo, cập nhật, gỡ bỏ trả mã HTTP \texttt{202 Accepted}.
+Các quy tắc chính:
+
+\begin{itemize}
+  \item \textbf{Tạo mới:} kiểm tra node tồn tại. Nếu đã có runtime cùng tên trên
+        node với deployment còn hiệu lực: spec giống hệt thì trả lại deployment cũ
+        (gửi lại idempotent); spec khác thì báo xung đột và yêu cầu dùng PUT.
+        Ngược lại, sinh \texttt{runtime\_id}, tạo bản ghi Runtime (CREATING) và
+        Deployment, rồi phát lệnh \texttt{deploy}.
+  \item \textbf{Cập nhật:} chỉ ghi đè những trường được gửi lên, đồng bộ bản ghi
+        Runtime và phát lệnh \texttt{update}.
+  \item \textbf{Gỡ bỏ:} chuyển REMOVING và phát lệnh \texttt{remove}; bản ghi
+        Deployment được giữ làm lịch sử, bản ghi Runtime bị xóa khi Edge xác nhận.
+  \item \textbf{Điều khiển:} start/stop/restart chỉ áp dụng cho runtime có
+        deployment còn hiệu lực.
+\end{itemize}
+
+Trước khi publish, service luôn gọi \texttt{dispatched()} và lưu deployment, nên
+trạng thái IN\_PROGRESS và \texttt{last\_command\_id} đã bền vững trước khi lệnh
+rời khỏi Cloud. CommandGateway đóng gói việc publish lên topic
+\path{edge/{cluster}/{node}/command/{type}}.
+
+\subsection{Các handler bất đồng bộ}
+
+\begin{itemize}
+  \item \textbf{NodeStateHandler} tiêu thụ \path{edge/+/+/state}: cập nhật
+        heartbeat, trạng thái Agent, thông tin phần cứng và đồng bộ trạng thái,
+        \texttt{container\_id} của từng runtime do node báo cáo.
+  \item \textbf{DeploymentEventHandler} tiêu thụ \path{event/deployment}: tìm
+        deployment theo \texttt{deployment\_id} hoặc \texttt{runtime\_id}, áp dụng
+        kết quả qua \texttt{apply\_result}, cập nhật trạng thái runtime hoặc xóa
+        runtime khi đã REMOVED.
+  \item \textbf{TelemetryHandler} tiêu thụ \path{telemetry/{kind}}: kiểm tra schema
+        theo loại, lưu mẫu vào Redis; mẫu runtime được khóa theo
+        \texttt{runtime:\{runtime\_id\}}.
+  \item \textbf{EdgeEventHandler} tiêu thụ \path{event/+}: ghi mọi sự kiện vào nhật
+        ký của node (\texttt{node\_logs}).
+  \item \textbf{NodeLivenessService} quét định kỳ (10~s) và chuyển các node có
+        heartbeat cũ hơn \texttt{node\_heartbeat\_timeout\_sec} (30~s) sang OFFLINE.
+\end{itemize}
+
+\subsection{Monitoring và Realtime Service}
+
+MonitoringService cung cấp mẫu telemetry mới nhất của một node (theo từng loại),
+lịch sử gần đây của một loại và danh sách event. RedisTelemetryRepository lưu
+\texttt{telemetry:\{node\}:latest} dạng hash và \texttt{telemetry:\{node\}:\{kind\}}
+dạng list giới hạn 720 mẫu (tương đương 1 giờ với chu kỳ 5~s), có TTL 1 giờ.
+
+RealtimeService đăng ký \path{edge/#} trên broker và phân phối thông điệp tới các
+WebSocket client theo bộ lọc topic của từng client (hỗ trợ wildcard MQTT
+\texttt{+} và \texttt{\#}). Client có thể đổi bộ lọc khi đang kết nối bằng thông
+điệp \texttt{subscribe}/\texttt{unsubscribe}; xác nhận \texttt{ack} đi qua cùng
+hàng đợi để giữ thứ tự với dữ liệu.
+
+\subsection{Triển khai tiến trình}
+
+Cloud chạy như một tiến trình duy nhất trên cổng 8000, phục vụ REST, WebSocket,
+MCP và embedded worker (\texttt{CLOUD\_EMBEDDED\_WORKER=true}). Khi cần mở rộng,
+worker có thể tách thành tiến trình riêng (\texttt{apps/cloud/worker}) trong khi API
+được nhân bản. Chế độ \texttt{CLOUD\_STORAGE\_BACKEND=memory} thay PostgreSQL và
+Redis bằng repository trong bộ nhớ, phục vụ phát triển và kiểm thử tự động.

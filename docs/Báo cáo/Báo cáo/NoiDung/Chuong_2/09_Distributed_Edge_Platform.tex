@@ -1,0 +1,36 @@
+\section{Distributed Edge Platform}
+
+\subsection{Cloud Control Plane}
+
+Cloud Control Plane duy trì trạng thái mong muốn và điều phối các domain nghiệp
+vụ. Thành phần này cung cấp API cho Dashboard và Copilot, lưu lịch sử model,
+deployment, command, incident và audit. Control Plane không tham gia trực tiếp
+vào vòng lặp inference nên Edge vẫn hoạt động khi Cloud tạm thời gián đoạn.
+
+\subsection{Edge Agent}
+
+Edge Agent là đại diện quản lý trên mỗi node. Agent đăng ký danh tính, nhận lệnh,
+đồng bộ desired state, tải artifact, điều khiển runtime và gửi actual state. Agent
+phải giới hạn quyền hệ thống, xác thực nguồn lệnh và bảo đảm một command không
+bị thực thi hai lần khi message broker gửi lại.
+
+\subsection{Telemetry}
+
+Telemetry gồm metric, log, event và state report. Metric phục vụ theo dõi xu
+hướng; event ghi nhận thay đổi rời rạc; log hỗ trợ chẩn đoán chi tiết; state report
+đối chiếu desired state với actual state. Khi mất mạng, dữ liệu quan trọng được
+đệm cục bộ theo dung lượng giới hạn và gửi lại theo thứ tự phù hợp.
+
+\subsection{Message Broker}
+
+Message broker tách Control Plane khỏi kết nối trực tiếp đến từng node. MQTT phù
+hợp với thiết bị biên nhờ mô hình publish--subscribe và mức QoS linh hoạt
+\cite{mqtt5}. Topic phải được phân vùng theo tenant/node, áp dụng TLS và quyền
+publish/subscribe tối thiểu.
+
+\subsection{Monitoring}
+
+Monitoring thu thập, lưu trữ và trực quan hóa telemetry; đồng thời đánh giá rule
+để phát hiện bất thường vận hành. Một rule cần metric, cửa sổ thời gian, ngưỡng,
+mức nghiêm trọng và điều kiện đóng. Kết quả phát hiện được chuyển thành Incident
+thay vì chỉ tồn tại dưới dạng biểu đồ.

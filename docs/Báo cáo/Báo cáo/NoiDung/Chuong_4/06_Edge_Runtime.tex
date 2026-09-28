@@ -1,0 +1,32 @@
+\section{Thiết kế Edge Runtime}
+
+Luồng xử lý của Edge Runtime được thể hiện trong
+Hình~\ref{fig:edge-runtime-design}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.55cm]
+  \node[flowbox] (camera) {Camera};
+  \node[flowbox, below=of camera] (capture) {Frame Capture};
+  \node[flowbox, below=of capture] (pre) {Preprocess};
+  \node[flowbox, below=of pre] (trt) {TensorRT};
+  \node[flowbox, below=of trt] (post) {Postprocess};
+  \node[flowbox, below=of post] (det) {Detection};
+  \draw[flowarrow] (camera) -- (capture);
+  \draw[flowarrow] (capture) -- (pre);
+  \draw[flowarrow] (pre) -- (trt);
+  \draw[flowarrow] (trt) -- (post);
+  \draw[flowarrow] (post) -- (det);
+\end{tikzpicture}
+\caption{Thiết kế pipeline Edge Runtime}
+\label{fig:edge-runtime-design}
+\end{figure}
+
+Các stage giao tiếp qua hàng đợi có kích thước giới hạn để tránh tăng latency vô
+hạn. Khi consumer chậm, chính sách có thể bỏ frame cũ thay vì xử lý mọi frame.
+Bộ đệm GPU được cấp phát khi load model và tái sử dụng trong suốt vòng đời
+runtime. Metrics timer bao quanh từng stage và toàn pipeline.
+
+Runtime nhận một cấu hình bất biến cho mỗi phiên chạy, gồm camera source, model
+artifact, input shape, threshold, NMS và output sink. Thay đổi cấu hình tạo phiên
+bản mới và được Edge Agent áp dụng có kiểm soát.

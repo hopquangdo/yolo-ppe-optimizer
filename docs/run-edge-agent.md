@@ -21,7 +21,7 @@ Nothing else — no source, no build.
 On the server:
 
 ```bash
-curl -X POST https://ops.example.com/api/v1/fleet/devices \
+curl -X POST https://ops.example.com/api/v1/agent/devices \
   -H 'content-type: application/json' \
   -d '{"name":"cam-plant-a-01","site":"Plant A","hardware":"Jetson Orin Nano"}'
 # -> { "success": true, "data": { "id": 42, ... } }
@@ -46,6 +46,7 @@ services:
       - "9100:9100"
     volumes:
       - edge_state:/var/lib/edge-agent            # desired/reported state + downloaded models
+      - ./videos:/media:ro                        # local video files for testing/replay
       # - ./certs:/certs:ro                        # if using MQTT TLS
     restart: unless-stopped
     # --- Jetson: GPU + camera passthrough (use the :1.0-jetson image) ---
@@ -85,6 +86,7 @@ CAMERAS__0__ID=bay-1
 CAMERAS__0__SOURCE=0                 # webcam index | rtsp://user:pass@host/stream | /media/clip.mp4
 CAMERAS__0__ZONE=loading-bay
 CAMERAS__0__FPS_LIMIT=10
+CAMERAS__0__LOOP=false               # true: replay a video file continuously
 
 # inference tuning (optional)
 INFERENCE__CONF_THRESHOLD=0.25
@@ -94,6 +96,35 @@ INFERENCE__IMGSZ=640
 
 > If `CAMERAS__0__SOURCE` is a file path or `/dev/video*`, mount it into the
 > container (`volumes:` / `devices:`).
+
+### Chạy bằng video thay cho camera/stream
+
+Đặt video vào thư mục `videos/` cạnh file `docker-compose.yml`, sau đó cấu hình:
+
+```dotenv
+CAMERAS__0__SOURCE=/media/demo.mp4
+CAMERAS__0__LOOP=true
+```
+
+Với cấu hình trên, container đọc video `/media/demo.mp4` và tự chạy lại từ đầu
+khi tới cuối file. Nếu muốn chạy video một lần, đặt `CAMERAS__0__LOOP=false`.
+
+Sau đó khởi động agent:
+
+```bash
+mkdir -p videos
+docker compose up -d
+docker compose logs -f edge-agent
+```
+
+Khi chạy trực tiếp ngoài Docker, dùng đường dẫn thật tới file video và cài thêm
+OpenCV:
+
+```bash
+pip install -e "app/backend/edge_agent[inference]"
+CAMERAS__0__ID=demo CAMERAS__0__SOURCE=/absolute/path/demo.mp4 \
+CAMERAS__0__LOOP=true edge-agent
+```
 
 ---
 
@@ -128,7 +159,7 @@ curl http://localhost:9100/status
 On the server, the device should now show `online`:
 
 ```bash
-curl https://ops.example.com/api/v1/fleet/devices
+curl https://ops.example.com/api/v1/agent/devices
 ```
 
 ---

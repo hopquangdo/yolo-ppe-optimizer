@@ -1,0 +1,28 @@
+\chapter{DATABASE SCHEMA}
+
+\begin{longtable}{L{3.8cm}L{4cm}L{6.7cm}}
+\caption{Các bảng hoặc collection nghiệp vụ chính}\label{tab:database-schema}\\
+\toprule
+\textbf{Bảng} & \textbf{Khóa/quan hệ chính} & \textbf{Vai trò}\\
+\midrule\endfirsthead
+\toprule
+\textbf{Bảng} & \textbf{Khóa/quan hệ chính} & \textbf{Vai trò}\\
+\midrule\endhead
+nodes & node\_id & Danh tính, capability, trạng thái và last-seen của Edge node.\\
+models & model\_id & Thông tin logic của một model.\\
+model\_versions & version\_id, model\_id & Phiên bản, trạng thái release và benchmark.\\
+artifacts & artifact\_id, version\_id & URI, checksum, precision và compatibility.\\
+deployments & deployment\_id, version\_id & Kế hoạch rollout và trạng thái tổng.\\
+deployment\_targets & deployment\_id, node\_id & Trạng thái triển khai trên từng node.\\
+commands & command\_id, node\_id & Payload, deadline, idempotency và kết quả lệnh.\\
+incidents & incident\_id & Severity, resource, timeline và resolution.\\
+documents & document\_id & Metadata tài liệu Knowledge.\\
+document\_chunks & chunk\_id, document\_id & Nội dung chia đoạn và vector/index reference.\\
+conversations & conversation\_id & Phiên hội thoại Copilot.\\
+tool\_calls & tool\_call\_id, conversation\_id & Công cụ, tham số, policy và kết quả.\\
+audit\_logs & audit\_id & Actor, action, resource và thời điểm.\\
+\bottomrule
+\end{longtable}
+
+Sơ đồ ERD, kiểu dữ liệu, index, constraint và migration version cần được xuất từ
+database thực tế để bổ sung vào bản hoàn thiện.

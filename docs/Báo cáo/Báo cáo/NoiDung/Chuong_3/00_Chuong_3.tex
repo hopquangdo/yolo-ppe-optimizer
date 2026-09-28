@@ -1,0 +1,18 @@
+% =====================================================================
+% CHƯƠNG 3 - NGHIÊN CỨU VÀ TỐI ƯU MÔ HÌNH YOLO
+% =====================================================================
+\chapter{NGHIÊN CỨU VÀ TỐI ƯU MÔ HÌNH YOLO}
+
+Chương này trình bày phần nghiên cứu mô hình trước khi đưa model vào nền tảng.
+Quy trình bắt đầu từ baseline FP32, lần lượt đánh giá pruning, QAT, kết hợp
+pruning--QAT và chuyển đổi TensorRT. Kết quả của chương là một model version có
+trade-off phù hợp và đủ metadata để đăng ký vào Model Registry.
+
+\input{NoiDung/Chuong_3/01_Bai_toan_toi_uu}
+\input{NoiDung/Chuong_3/02_Xay_dung_baseline}
+\input{NoiDung/Chuong_3/03_Toi_uu_Pruning}
+\input{NoiDung/Chuong_3/04_Toi_uu_QAT}
+\input{NoiDung/Chuong_3/05_Ket_hop_Pruning_QAT}
+\input{NoiDung/Chuong_3/06_Chuyen_doi_TensorRT}
+\input{NoiDung/Chuong_3/07_Lua_chon_mo_hinh}
+\input{NoiDung/Chuong_3/08_Ket_chuong}

@@ -1,0 +1,6 @@
+# Native TensorRT engine (.engine / .plan). Build ON the target device: python scripts/export_tensorrt.py
+backend: tensorrt
+imgsz: 640
+conf: 0.25
+iou: 0.7
+device: "0"

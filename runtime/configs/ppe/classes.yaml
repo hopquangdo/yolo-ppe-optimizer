@@ -1,0 +1,9 @@
+# Optional class_id → name override. Empty = use the names embedded in the model.
+# Needed while dataset/ppe-custom.yaml still has placeholder names (class0..class8), e.g.:
+#   names:
+#     0: person
+#     1: helmet
+#     2: vest
+#     3: no_helmet
+#     4: no_vest
+names: {}

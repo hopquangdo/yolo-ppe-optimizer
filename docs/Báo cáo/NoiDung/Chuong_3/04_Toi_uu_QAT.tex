@@ -1,0 +1,49 @@
+\section{Tối ưu bằng QAT}
+
+\subsection{Thiết lập quantization}
+
+QAT được hiện thực bằng thư viện \texttt{pytorch-quantization} của NVIDIA, là
+đường chính thức để tạo mô hình INT8 có thông tin lượng tử tường minh cho
+TensorRT \cite{jacob2018}. Hàm \texttt{quant\_modules.initialize()} thay mọi
+\texttt{nn.Conv2d} bằng \texttt{QuantConv2d} trước khi dựng mô hình. Theo mặc định
+của thư viện, lượng tử hóa là \textbf{đối xứng}: trọng số lượng tử \textbf{theo
+từng kênh đầu ra} (per-channel), activation lượng tử \textbf{theo tensor}
+(per-tensor). Với các phép cộng dư và ghép kênh trong các khối
+\texttt{C3k2}, \texttt{C2PSA} đã cắt tỉa, đồ án viết các lớp lượng tử riêng
+(\texttt{quant\_ops\_pruned\_yolo26.py}) chèn \texttt{TensorQuantizer} cho từng
+đầu vào, để TensorRT có thể hợp nhất phép toán ở INT8 thay vì chuyển đổi qua lại
+giữa INT8 và FP16. Các lượng tử của những nhánh không cần thiết được vô hiệu hóa
+để giữ độ chính xác.
+
+\subsection{Hiệu chỉnh}
+
+Trước khi huấn luyện, thang lượng tử (\texttt{amax}) của activation được hiệu
+chỉnh trên 256 batch dữ liệu huấn luyện bằng phương pháp \textbf{entropy}: với
+mỗi tensor, thu histogram giá trị và chọn ngưỡng cắt cực tiểu hóa KL divergence
+giữa phân bố gốc và phân bố sau lượng tử. Phương pháp này bỏ qua các giá trị
+ngoại lai hiếm gặp, cho độ phân giải lượng tử tốt hơn so với lấy giá trị lớn nhất.
+
+\subsection{Fake quantization và huấn luyện}
+
+Sau hiệu chỉnh, các nút fake-quantization mô phỏng phép làm tròn và cắt về INT8
+trong lan truyền thuận, còn gradient đi qua bằng Straight-Through Estimator. Mô
+hình được fine-tune nhẹ 20 epoch, batch 8, optimizer SGD momentum 0,9; learning
+rate đầu vào $10^{-3}$ được chia 100 bên trong trainer (thành $10^{-5}$) vì QAT
+chỉ cần điều chỉnh nhỏ quanh điểm đã hội tụ. Tùy chọn hiệu chỉnh lại định kỳ
+(\texttt{recalib\_every}) mặc định tắt. QAT chỉ được chạy trên checkpoint \emph{đã
+phục hồi} sau cắt tỉa, không chạy trên checkpoint vừa cắt còn yếu.
+
+\subsection{Export INT8}
+
+Checkpoint QAT được export sang ONNX, trong đó mỗi tensor lượng tử được biểu diễn
+bằng một cặp nút Q/DQ (\texttt{QuantizeLinear} và \texttt{DequantizeLinear})
+mang thang lượng tử đã học. TensorRT đọc các nút Q/DQ này để build engine INT8 trực tiếp, không cần bước
+hiệu chỉnh PTQ riêng. Thư viện \texttt{pytorch-quantization} yêu cầu CUDA nên giai
+đoạn này chạy trên môi trường Linux có GPU (Google Colab), không chạy được trên
+máy Windows chỉ có CPU.
+
+\subsection{Đánh giá mô hình QAT}
+
+Mô hình QAT được đánh giá ở ba điểm: checkpoint fake-quant trong PyTorch, ONNX
+sau export và TensorRT engine trên thiết bị. Chênh lệch giữa các điểm cho biết sai
+số đến từ lượng tử, từ export hay từ backend.
