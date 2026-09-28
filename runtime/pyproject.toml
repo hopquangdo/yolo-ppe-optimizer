@@ -4,25 +4,38 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ppe-runtime"
-version = "0.1.0"
-description = "PPE inference runtime: detect → track → PPE compliance rules."
+dynamic = ["version"]
+description = "PPE inference runtime: detect → track → associate PPE → violation rules."
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.23",
-    "opencv-python-headless>=4.8",
+    "opencv-python>=4.8",  # same distribution ultralytics pulls in (headless + full would clash on cv2)
     "pyyaml>=6.0",
-    "ultralytics",  # in-repo fork: pip install -e .. (repo root) before this package
+    "pydantic>=2.5",
+    "requests>=2.31",
+    "lap>=0.5.12",  # linear assignment for the trackers (ultralytics would otherwise auto-install it at runtime)
+    # Trackers (and the pytorch engine) come from the in-repo ultralytics fork:
+    # install it first with `pip install -e ..` (repo root); it is not pulled from PyPI here.
+    "ultralytics",
 ]
 
 [project.optional-dependencies]
+onnx = ["onnxruntime>=1.17"]          # or onnxruntime-gpu
+mqtt = ["paho-mqtt>=1.6"]
+kafka = ["kafka-python>=2.0"]
 dev = ["pytest>=8"]
+# tensorrt: use the TensorRT shipped with JetPack / the NVIDIA container, not pip
 
 [project.scripts]
-ppe-runtime = "ppe_runtime.__main__:main"
-ppe-bench = "ppe_runtime.bench:main"
+ppe-runtime = "ppe_runtime.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "ppe_runtime.version.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["ppe_runtime*"]
 
-[tool.setuptools.package-data]
-ppe_runtime = ["tracking/cfg/*.yaml", "ppe/cfg/*.yaml"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["model: needs real weights under ../weights (skipped when missing)"]

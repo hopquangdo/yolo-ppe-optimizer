@@ -30,7 +30,9 @@ class Tracker(ABC):
 class _TrackInput:
     """The subset of ultralytics `Boxes` that BYTETracker/BOTSORT read: `conf`, `cls`, `xywh`, boolean slicing.
 
-    `xywh` carries the source detection index as a 5th column; the tracker echoes it back as its last result column.
+    `cls` carries the source detection's list index instead of its class: the trackers never use `cls` for matching,
+    only echo it back, while their own `idx` column is relative to an internally filtered subset and can't be mapped
+    back to the input.
     """
 
     def __init__(self, conf: np.ndarray, cls: np.ndarray, xywh: np.ndarray) -> None:
@@ -39,14 +41,14 @@ class _TrackInput:
     @classmethod
     def build(cls, indexed: list[tuple[int, Detection]]) -> _TrackInput:
         if not indexed:
-            return cls(np.zeros(0, np.float32), np.zeros(0, np.float32), np.zeros((0, 5), np.float32))
+            return cls(np.zeros(0, np.float32), np.zeros(0, np.float32), np.zeros((0, 4), np.float32))
         rows = [
-            ((d.box[0] + d.box[2]) / 2, (d.box[1] + d.box[3]) / 2, d.box[2] - d.box[0], d.box[3] - d.box[1], i)
-            for i, d in indexed
+            ((d.box[0] + d.box[2]) / 2, (d.box[1] + d.box[3]) / 2, d.box[2] - d.box[0], d.box[3] - d.box[1])
+            for _, d in indexed
         ]
         return cls(
             np.array([d.confidence for _, d in indexed], np.float32),
-            np.array([d.class_id for _, d in indexed], np.float32),
+            np.array([i for i, _ in indexed], np.float32),
             np.array(rows, np.float32),
         )
 
@@ -71,8 +73,8 @@ class UltralyticsTracker(Tracker):
         indexed = [(i, d) for i, d in enumerate(detections) if d.class_name in self.classes]
         out = [d for d in detections if d.class_name not in self.classes]
         rows = self._impl.update(_TrackInput.build(indexed), image)
-        for row in rows:  # x1, y1, x2, y2, track_id, score, cls, idx
-            det = detections[int(row[-1])]
+        for row in rows:  # x1, y1, x2, y2, track_id, score, cls (= source index), idx
+            det = detections[int(row[6])]
             out.append(det.with_track(int(row[4]), (float(row[0]), float(row[1]), float(row[2]), float(row[3]))))
         return out
 

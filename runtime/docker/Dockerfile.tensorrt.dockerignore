@@ -1,0 +1,12 @@
+# Build context is the repo root; send only what the runtime image needs (BuildKit reads <Dockerfile>.dockerignore).
+*
+!pyproject.toml
+!README.md
+!LICENSE
+!ultralytics/
+!optimization/
+!runtime/
+**/__pycache__
+**/*.pyc
+runtime/tests/
+runtime/.env*

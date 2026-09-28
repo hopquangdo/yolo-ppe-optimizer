@@ -1,0 +1,26 @@
+# PPE runtime for NVIDIA Jetson (JetPack 6): TensorRT + CUDA from the base image.
+# Build ON the Jetson (or with arm64 emulation), from the REPO ROOT:
+#   docker build -f runtime/docker/Dockerfile.tensorrt -t edgeops/edge-runtime:latest-jetson .
+# Run with the NVIDIA runtime (the Edge Agent does this when resource_limits.runtime = "nvidia"):
+#   docker run --rm --runtime nvidia -v $PWD/weights:/models edgeops/edge-runtime:latest-jetson \
+#     ppe-runtime run --engine tensorrt --weights /models/yolo26n.engine --source 0
+# Build .engine files on the target device (scripts/export_tensorrt.py): engines are GPU/TensorRT-version specific.
+ARG BASE=ultralytics/ultralytics:latest-jetson-jetpack6
+FROM ${BASE}
+
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PPE_CONFIG_DIR=/app/runtime/configs YOLO_OFFLINE=1
+WORKDIR /app
+
+# Replace the base image's ultralytics with the in-repo fork; keep its Jetson torch / onnxruntime-gpu / TensorRT
+COPY pyproject.toml README.md LICENSE ./
+COPY ultralytics/ ultralytics/
+COPY optimization/ optimization/
+RUN pip install --no-deps --force-reinstall .
+
+COPY runtime/ runtime/
+RUN pip install --no-deps ./runtime \
+    && pip install "pydantic>=2.5" "pyyaml>=6.0" "requests>=2.31" "lap>=0.5.12"
+
+VOLUME ["/models"]
+CMD ["ppe-runtime", "agent", "--config", "/app/runtime/configs/jetson.yaml"]
