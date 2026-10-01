@@ -36,11 +36,13 @@ class Detector(ABC):
         for _ in range(runs):
             self.predict(dummy)
 
-    def close(self) -> None:  # noqa: B027 - optional hook
+    def close(self) -> None:
         pass
 
     # --- shared by native (ONNX / TensorRT) backends ---
-    def decode(self, output: np.ndarray, gain: float, pad: tuple[float, float], shape: tuple[int, ...]) -> list[Detection]:
+    def decode(
+        self, output: np.ndarray, gain: float, pad: tuple[float, float], shape: tuple[int, ...]
+    ) -> list[Detection]:
         """Decode a YOLO detect head output for one image.
 
         Handles both export layouts:
