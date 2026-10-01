@@ -72,8 +72,12 @@ class RuntimeMetrics:
     def record(self, result: FrameResult) -> None:
         self._frames += 1
         t = result.timings
-        for key, value in (("detect_ms", t.detect_ms), ("track_ms", t.track_ms), ("rules_ms", t.rules_ms),
-                           ("total_ms", t.total_ms)):
+        for key, value in (
+            ("detect_ms", t.detect_ms),
+            ("track_ms", t.track_ms),
+            ("rules_ms", t.rules_ms),
+            ("total_ms", t.total_ms),
+        ):
             self._stages[key].append(value)
         for d in result.detections:
             self._confidences.append(d.confidence)
