@@ -4,7 +4,7 @@ Xem PLAN.md để biết thiết kế đầy đủ. Các ràng buộc tích hợ
 tuân thủ ở đây (PLAN.md mục 10):
   - Teacher không bao giờ là submodule đã đăng ký của student, để
     ``build_optimizer`` (duyệt ``self.model.named_modules()`` không lọc theo
-    ``requires_grad``) không bao giờ thấy tham số của teacher.
+    ``requires_grad``) không bao giờ thấy than số của teacher.
   - Không đụng vào nhánh ``sr`` (sparsity training) của ``BaseTrainer`` hay
     logic backward()/checkpoint-save của nó — distillation phải chạy với ``sr=0``.
   - Tái dùng ``DetectionTrainer.get_model()`` qua ``super()`` thay vì viết lại
@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.models.yolo.detect.train import DetectionTrainer
 from ultralytics.nn.distill_adapters import build_adapters
@@ -27,8 +27,8 @@ from ultralytics.utils.distill_utils import (
     cls_kd_loss,
     cwd_loss,
     kd_alpha_schedule,
-    register_feature_hooks,
     reg_kd_loss,
+    register_feature_hooks,
     remove_hooks,
 )
 from ultralytics.utils.tal import dist2bbox, make_anchors
@@ -44,8 +44,8 @@ def _unwrap_preds(preds: Any) -> dict:
 def _decode_boxes(boxes_raw: torch.Tensor, feats: list[torch.Tensor], stride: torch.Tensor) -> torch.Tensor:
     """Decode offset thô từng cạnh thành box xywh theo tỉ lệ ảnh gốc.
 
-    Mô phỏng lại ``DetectPruned._inference`` (head_pruned.py:110-116) nhưng không có DFL
-    (reg_max=1 nghĩa là module DFL là ``nn.Identity``, xem PLAN.md mục 3).
+    Mô phỏng lại ``DetectPruned._inference`` (head_pruned.py:110-116) nhưng không có DFL (reg_max=1 nghĩa là module DFL
+    là ``nn.Identity``, xem PLAN.md mục 3).
     """
     anchors, strides = (a.transpose(0, 1) for a in make_anchors(feats, stride, 0.5))
     return dist2bbox(boxes_raw, anchors.unsqueeze(0), xywh=True, dim=1) * strides
@@ -54,9 +54,8 @@ def _decode_boxes(boxes_raw: torch.Tensor, feats: list[torch.Tensor], stride: to
 def _teacher_forward_preds(teacher: nn.Module, img: torch.Tensor) -> dict:
     """Forward teacher với BN/dropout ở eval mode nhưng head vẫn trả về preds thô.
 
-    Dùng lại đúng trick đã có trong ``tasks_pruned.py`` (``DetectionModelPruned.__init__``)
-    để lấy output đúng shape lúc tính stride: chỉ cần cờ ``training`` của head là True để
-    ``forward_head`` bỏ qua bước postprocess.
+    Dùng lại đúng trick đã có trong ``tasks_pruned.py`` (``DetectionModelPruned.__init__``) để lấy output đúng shape lúc
+    tính stride: chỉ cần cờ ``training`` của head là True để ``forward_head`` bỏ qua bước postprocess.
     """
     head = teacher.model[-1]
     was_head_training = head.training
@@ -72,11 +71,9 @@ def _teacher_forward_preds(teacher: nn.Module, img: torch.Tensor) -> dict:
 class DistillMixin:
     """Thêm loss distillation từ teacher lên trên một implementation ``*.loss()`` bình thường.
 
-    Được mix vào ``DetectionModel``/``DetectionModelPruned`` bằng cách đổi class
-    (class-swap) trong ``DistillTrainer.get_model()``
-    (``model.__class__ = DistillDetectionModelPruned``), nên dùng được cho cả
-    trường hợp student đã pruned lẫn student là một scale nhỏ hơn bình thường
-    (xem PLAN.md mục "Phạm vi tổng quát").
+    Được mix vào ``DetectionModel``/``DetectionModelPruned`` bằng cách đổi class (class-swap) trong
+    ``DistillTrainer.get_model()`` (``model.__class__ = DistillDetectionModelPruned``), nên dùng được cho cả trường hợp
+    student đã pruned lẫn student là một scale nhỏ hơn bình thường (xem PLAN.md mục "Phạm vi tổng quát").
     """
 
     def attach_teacher(
@@ -97,7 +94,7 @@ class DistillMixin:
         self._teacher_hooks, self._teacher_feats = register_feature_hooks(teacher, feat_layers)
 
     def detach_teacher(self) -> None:
-        """Gỡ hook và bỏ tham chiếu teacher (vd trước khi export)."""
+        """Gỡ hook và bỏ than chiếu teacher (vd trước khi export)."""
         if hasattr(self, "_student_hooks"):
             remove_hooks(self._student_hooks)
         if hasattr(self, "_teacher_hooks"):
@@ -111,10 +108,10 @@ class DistillMixin:
     def __deepcopy__(self, memo):
         """Loại bỏ teacher + hook khi bị deepcopy (lúc khởi tạo EMA, lúc lưu checkpoint).
 
-        Cả bản snapshot EMA lẫn checkpoint đã lưu đều không nên mang theo tham chiếu
+        Cả bản snapshot EMA lẫn checkpoint đã lưu đều không nên mang theo than chiếu
         teacher (PLAN.md mục 10, rủi ro 1/3) hay closure của hook (forward hook trên
         ``self.model`` chỉ được đăng ký cho student đang sống; một bản copy cũ sẽ hoặc
-        giữ tham chiếu chết, hoặc nếu bị pickle sẽ lỗi — ``torch.save`` không pickle
+        giữ than chiếu chết, hoặc nếu bị pickle sẽ lỗi — ``torch.save`` không pickle
         được hook trỏ ngược về dict của một object khác).
         """
         import copy as _copy
@@ -175,12 +172,10 @@ class DistillDetectionModel(DistillMixin, DetectionModel):
 class DistillTrainer(DetectionTrainer):
     """Biến thể của DetectionTrainer, train student đối chiếu với một teacher đóng băng.
 
-    Các kwarg thêm cho ``model.train(...)`` (bị pop ở đây, trước khi ``get_cfg``
-    kiểm tra key lạ — xem PLAN.md mục 10):
-      teacher (str): đường dẫn checkpoint teacher (bắt buộc).
-      lambda_cwd (float): trọng số CWD feature-loss, mặc định 50.0 (PLAN.md 4.1).
-      kd_temperature (float): nhiệt độ cho CWD/cls KD, mặc định 4.0.
-      kd_alpha_max_epoch (int, tuỳ chọn): số epoch dùng cho lịch alpha cosine
+    Các kwarg thêm cho ``model.train(...)`` (bị pop ở đây, trước khi ``get_cfg`` kiểm tra key lạ — xem PLAN.md mục 10):
+    teacher (str): đường dẫn checkpoint teacher (bắt buộc). lambda_cwd (float): trọng số CWD feature-loss, mặc định 50.0
+    (PLAN.md 4.1). kd_temperature (float): nhiệt độ cho CWD/cls KD, mặc định 4.0. kd_alpha_max_epoch (int, tuỳ chọn): số
+    epoch dùng cho lịch alpha cosine
         (PLAN.md 4.4); mặc định lấy theo ``epochs`` trong training args.
     """
 
@@ -207,13 +202,16 @@ class DistillTrainer(DetectionTrainer):
         max_epoch = self.kd_alpha_max_epoch or getattr(self.args, "epochs", 100)
         model._kd_alpha_max_epoch = max_epoch
         LOGGER.info(
-            colorstr("yellow", f"Distillation enabled: teacher={self.teacher_weights}, "
-                     f"lambda_cwd={self.lambda_cwd}, T={self.kd_temperature}, kd_alpha_max_epoch={max_epoch}")
+            colorstr(
+                "yellow",
+                f"Distillation enabled: teacher={self.teacher_weights}, "
+                f"lambda_cwd={self.lambda_cwd}, T={self.kd_temperature}, kd_alpha_max_epoch={max_epoch}",
+            )
         )
         return model
 
     @staticmethod
-    def _update_kd_alpha(trainer: "DistillTrainer") -> None:
+    def _update_kd_alpha(trainer: DistillTrainer) -> None:
         from ultralytics.utils.torch_utils import unwrap_model
 
         model = unwrap_model(trainer.model)
