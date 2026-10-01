@@ -25,11 +25,11 @@ qua SSD và R-FCN về tốc độ khung hình [148].
 Ngoài ra, để đạt được một mô hình phát hiện vừa mạnh mẽ vừa chính xác hơn, 
 một số tác giả trình bày một loạt các chiến lược tăng cường. Chúng bao gồm làm giàu 
 tập dữ liệu đào tạo [85], sửa đổi kiến trúc mạng [157], điều chỉnh cơ chế [147] và tinh 
-chỉnh các tham số [74]. Nhiều nhà nghiên cứu đã trình bày nhiều phương pháp nâng 
+chỉnh các than số [74]. Nhiều nhà nghiên cứu đã trình bày nhiều phương pháp nâng 
 cao khác nhau để đạt được một mô hình phát hiện vừa có khả năng phục hồi vừa 
 chính xác hơn [142]. Các thuật toán tối ưu hóa nằm trong số các chiến lược được sử 
 dụng để nâng cao hiệu suất phát hiện. Các thuật toán này liên quan đến việc tìm kiếm 
-các mỏ neo dựa trên vùng tối ưu [24] và tinh chỉnh các siêu tham số [150]. Mỗi thuật 
+các mỏ neo dựa trên vùng tối ưu [24] và tinh chỉnh các siêu than số [150]. Mỗi thuật 
 toán tối ưu đều có những lợi thế riêng về độ mạnh mẽ và hiệu suất trong môi trường 
 nhiễu, không chắc chắn và vấn đề đa dạng. Điều quan trọng cần lưu ý là không có 
 thuật toán siêu thuật toán nào có thể luôn vượt trội hơn tất cả các thuật toán khác 
@@ -42,11 +42,11 @@ Thuật toán tối ưu hóa cá ngựa (Seahorse Optimizer - SHO) là một si�
 toán tối ưu hóa được sáng tạo mới bởi Zhao, Zhang [152]. Thuật toán này mô phỏng 
 hành vi của những chú cá ngựa trong tự nhiên để giải quyết các thách thức tối ưu hóa 
 toàn cục. Là một thuật toán dựa trên dân số mới được phát triển, SHO đã chứng minh 
-được tính hiệu quả và hiệu suất của nó trong các tác vụ tối ưu hóa toàn cục. Các tham 
+được tính hiệu quả và hiệu suất của nó trong các tác vụ tối ưu hóa toàn cục. Các than 
 số chung có khả năng thích ứng và hoạt động đơn giản của SHO góp phần tạo nên 
 tính mạnh mẽ của nó [113]. Nhiều nghiên cứu đã làm nổi bật tính ưu việt của SHO 
 so với các kỹ thuật lấy cảm hứng từ thiên nhiên khác. Hơn nữa, SHO cho thấy triển 
-vọng trong việc xác định các tham số điều chỉnh tối ưu cho nhiều mô hình học máy 
+vọng trong việc xác định các than số điều chỉnh tối ưu cho nhiều mô hình học máy 
 khác nhau [11]. Với các thuộc tính này, SHO có tiềm năng cải thiện hiệu suất 
 YOLOv5 như một trình tối ưu hóa. 
 Dựa trên những hiểu biết này, nhằm nâng cao hiệu suất của mô hình phát hiện, 
@@ -59,7 +59,7 @@ Dưới đây là phương pháp xây dựng mô hình trí tuệ nhân tạo (A
 liệu trực quan để nhận diện tình trạng sử dụng/không sử dụng PPE. Cách tiếp cận 
 được triển khai theo chuỗi kỹ thuật thống nhất: (i) thu thập – xây dựng bộ dữ liệu 
 ảnh/video, (ii) gán nhãn và chuẩn hoá dữ liệu, (iii) lựa chọn và huấn luyện mô hình 
-YOLOv5, (iv) tối ưu siêu tham số bằng thuật toán tối ưu hoá cá ngựa (SHO) theo cơ 
+YOLOv5, (iv) tối ưu siêu than số bằng thuật toán tối ưu hoá cá ngựa (SHO) theo cơ 
 chế tối ưu tầng ngoài, và (v) đánh giá mô hình bằng các chỉ số chuẩn của bài toán 
 phát hiện đối tượng, bao gồm Precision, Recall, F1-score và mAP. Trình tự này nhằm 
 đảm bảo mô hình vừa đạt độ chính xác phát hiện, vừa phù hợp yêu cầu triển khai thực 
@@ -105,7 +105,7 @@ Thuật toán tối ưu hóa cá ngựa (Seahorse Optimizer - SHO) là một si�
 toán tối ưu hóa dựa trên quần thể mới lấy cảm hứng từ hành vi của cá ngựa trong môi 
 trường sống tự nhiên của chúng [152]. Thuật toán SHO bao gồm ba giai đoạn thủ tục 
 chính: di chuyển, săn mồi và sinh sản. Trong các giai đoạn này, một quy trình lựa 
-chọn tham số được sử dụng để quyết định giải pháp tốt hơn giữa 𝑋𝑖
+chọn than số được sử dụng để quyết định giải pháp tốt hơn giữa 𝑋𝑖
 𝑛𝑒𝑤và 𝑋𝑖
 𝑜𝑙𝑑cho các 
 bước tiếp theo. 
@@ -177,7 +177,7 @@ new
 i
 X
 biểu diễn giải pháp mới được tạo ra trong giai đoạn di chuyển ; r2 là 
-một số ngẫu nhiên trong khoảng [0, 1]; tham số α giảm dần sau mỗi lần lặp, như được 
+một số ngẫu nhiên trong khoảng [0, 1]; than số α giảm dần sau mỗi lần lặp, như được 
 mô tả bởi Công thức (2.12). t và T lần lượt là số lần lặp hiện tại và tối đa. 
 2
 1
@@ -277,7 +277,7 @@ toàn cục một mục tiêu [153]. Những đặc điểm này đã thúc đ�
 sử dụng SHO để giải quyết các vấn đề đa mục tiêu [10], khẳng định hiệu suất vượt 
 trội của nó so với các thuật toán khác được thiết kế cho nhiều mục tiêu [113]. Mặc dù 
 SHO đã nhận được sự hoan nghênh vì hiệu suất ấn tượng của nó trong các hàm chuẩn 
-và các ứng dụng thực tế [7, 11], nhưng nó vẫn chưa được sử dụng để điều chỉnh tham 
+và các ứng dụng thực tế [7, 11], nhưng nó vẫn chưa được sử dụng để điều chỉnh than 
 số trong các kỹ thuật học máy. Trong nghiên cứu này, SHO được áp dụng như một 
 kỹ thuật tối ưu hóa để cải thiện hiệu suất của YOLOv5. Sự cải thiện này đạt được 
 

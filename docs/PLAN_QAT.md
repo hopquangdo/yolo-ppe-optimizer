@@ -1,4 +1,4 @@
-# Plan: QAT (Quantization-Aware Training) cho YOLO26 pruned — port từ repo tham chiếu
+# Plan: QAT (Quantization-Aware Training) cho YOLO26 pruned — port từ repo than chiếu
 
 Trạng thái: **đã viết xong code** (chưa test được — máy hiện tại CPU-only
 Windows, `pytorch-quantization` cần CUDA). Cần review + test trên môi trường
@@ -46,9 +46,9 @@ dụng nguyên vẹn cho QAT:
   **strip bỏ trước khi QAT**, chỉ tồn tại lúc train distillation, không có
   trong graph suy luận thật.
 
-### 1.2 Kỹ thuật QAT từ repo tham chiếu — giữ nguyên (model-agnostic)
+### 1.2 Kỹ thuật QAT từ repo than chiếu — giữ nguyên (model-agnostic)
 
-Đọc trực tiếp `qat_pruned_trainer.py` của repo tham chiếu xác nhận các kỹ
+Đọc trực tiếp `qat_pruned_trainer.py` của repo than chiếu xác nhận các kỹ
 thuật sau **không phụ thuộc kiến trúc cụ thể (YOLOv8 hay YOLO26)**, dùng lại
 được nguyên vẹn:
 
@@ -59,7 +59,7 @@ thuật sau **không phụ thuộc kiến trúc cụ thể (YOLOv8 hay YOLO26)**
    phải closure) ép BN ở eval mode trong lúc QAT training, dùng
    running_mean/var đã calibrate thay vì batch statistics bị nhiễu bởi fake
    quantization noise. **Đúng bài học đã tự rút ra ở mục 12** (hook phải
-   picklable để không vỡ khi `deepcopy` cho EMA) — repo tham chiếu đã làm
+   picklable để không vỡ khi `deepcopy` cho EMA) — repo than chiếu đã làm
    đúng từ đầu, không phải tự phát hiện lại.
 3. **Pop custom override keys trước `super().__init__()`** — đúng pattern
    `DistillTrainer.__init__` đã dùng (mục 10, "Cơ chế tách trainer") để
@@ -105,7 +105,7 @@ thuật sau **không phụ thuộc kiến trúc cụ thể (YOLOv8 hay YOLO26)**
   finetune (mục 11 chạy lại) để chọn checkpoint tốt nhất làm input, thay vì
   chọn tuỳ ý.
 
-### 1.6 Code đã viết — khác biệt so với repo tham chiếu
+### 1.6 Code đã viết — khác biệt so với repo than chiếu
 
 File: `ultralytics/qat/nvidia_tensorrt/{quant_ops_pruned_yolo26.py,
 qat_trainer_yolo26.py}`, `scripts/qat.py`.
@@ -120,10 +120,10 @@ qat_trainer_yolo26.py}`, `scripts/qat.py`.
   cuối cùng — tự động bắt cả `cv2/cv3` (one2many) lẫn `one2one_cv2/cv3`
   (one2one) vì cả hai đều nằm trong cùng `DetectPruned` (cùng prefix
   `model.{idx}.`), không cần tách logic riêng như dự tính ban đầu ở mục 1.3.
-- **`_skip_attention_quantizers_yolo26`**: hàm mới (repo tham chiếu không có,
+- **`_skip_attention_quantizers_yolo26`**: hàm mới (repo than chiếu không có,
   YOLOv8 không có attention) — disable theo prefix tên module
   `C2PSAPruned`/`C3k2AttnPruned`.
-- **Khác biệt kiến trúc lớn nhất so với repo tham chiếu**: `QATTrainerYolo26`
+- **Khác biệt kiến trúc lớn nhất so với repo than chiếu**: `QATTrainerYolo26`
   **không** reimplement `_setup_train` như bản gốc (bản gốc copy gần như
   nguyên văn nội bộ `BaseTrainer` của ultralytics 8.3.231 — dataloader,
   optimizer, EMA, freeze layer thủ công, rất dễ vỡ khi upstream đổi API nội
@@ -133,7 +133,7 @@ qat_trainer_yolo26.py}`, `scripts/qat.py`.
   BN freeze hook + tắt AMP sau khi super chạy xong). Tương tự,
   `get_model()` tái dùng `DetectionTrainer.get_model()` (đã có sẵn logic load
   `maskbndict`/pruned checkpoint qua cờ `finetune`, xem `train.py:171-198`)
-  thay vì tự parse checkpoint như repo tham chiếu — nhờ đó không cần bước
+  thay vì tự parse checkpoint như repo than chiếu — nhờ đó không cần bước
   "build model tạm để calibrate rồi build lại model cuối" như repo gốc
   (vốn cần vì họ tự quản lý toàn bộ vòng đời checkpoint); ở đây calibrate
   trực tiếp trên model thật ngay trong `get_model()`, dùng
