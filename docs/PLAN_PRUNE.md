@@ -12,7 +12,7 @@ nghi ngờ pipeline finetune/distill có vấn đề. Điều tra sâu bằng c�
 tuyệt đối nếu code đúng) đã lộ ra **6 bug thật trong code prune, không liên
 quan gì đến distillation**:
 
-1. **`shortcut` đọc nhầm tham số** (`tasks_pruned.py`, cả 3 hàm
+1. **`shortcut` đọc nhầm than số** (`tasks_pruned.py`, cả 3 hàm
    `_parse_c3k2_bottleneck`/`_parse_c3k2_c3k`/`_parse_c3k2_attn`): code đọc
    `args[1]` từ yaml làm `shortcut`, nhưng theo đúng cách `ultralytics/nn/tasks.py`
    parse yaml gốc (`args = [c1, c2, *args[1:]]; args.insert(2, n)`), vị trí đó
@@ -51,7 +51,7 @@ quan gì đến distillation**:
 
 **Xác nhận sau khi sửa cả 6 bug**: `prune.py --prune-ratio 0.0` trên
 `yolo26n.pt` cho **mAP50-95 = 0.38715544628073... / mAP50 = 0.52915393314424...`
-— khớp **tuyệt đối từng chữ số thập phân** với `yolo26n.pt` gốc (không
+— khớp **tuyệt đối từng chữ số thập phân\*\* với `yolo26n.pt` gốc (không
 prune). Đây là bằng chứng dứt điểm: `prune.py` giờ là phép transfer weight
 hoàn toàn lossless ở ratio=0.0. Test tiếp `ratio=0.1` trên checkpoint
 sparsity-trained thật (không phải model sạch — model sạch chưa qua sparsity
@@ -62,7 +62,7 @@ checkpoint gốc — hành vi hợp lý, không còn dấu hiệu bug.
 **Việc cần làm tiếp** (chưa làm): benchmark toy so sánh distill vs finetune
 (xem `PLAN_DISTILL.md` mục 11) cần chạy lại từ đầu trên `prune.py` đã sửa —
 mọi kết luận cũ dựa trên checkpoint pruned bị lỗi (bug 1-6), không còn giá
-trị tham chiếu.
+trị than chiếu.
 
 ## 2. Bug optimizer trong sparsity training — AdamW sai, phải dùng SGD
 
@@ -77,7 +77,7 @@ mỗi bước.
 **Bug**: code cũ ép cứng `AdamW` cho nhánh `sr>0` (`trainer.py`
 `build_optimizer`, nhánh `optimizer="auto"`). Adam chuẩn hoá **mọi** thành
 phần gradient (kể cả phần L1 vừa tiêm) theo `sqrt(second-moment)` riêng của
-từng tham số — comment cũ trong code ghi "immune to AdamW second-moment
+từng than số — comment cũ trong code ghi "immune to AdamW second-moment
 normalization" là **sai**, đã verify thực nghiệm: giảm `sr` 10 lần (0.01 →
 0.001) chỉ làm chậm tốc độ suy giảm gamma ~4-5 lần, không phải 10 lần như
 lý thuyết SGD dự đoán — bằng chứng trực tiếp Adam đang khuếch đại/làm méo
@@ -149,15 +149,15 @@ finetune chưa đủ epoch, hay thí nghiệm chưa hoàn thiện) — cần c�
 
 ## 5. Kết quả thật (test thật trên checkpoint đã fix, pipeline nối tiếp)
 
-Prune ratio=0.1 (13-16% tham số) trên checkpoint sparsity thật (epoch ~34,
+Prune ratio=0.1 (13-16% than số) trên checkpoint sparsity thật (epoch ~34,
 `sr=1e-2` + decay), sau đó finetune 100 epoch (coco128, batch=8, imgsz=320):
 
-| Giai đoạn | mAP50-95 |
-|---|---|
-| Baseline gốc (`yolo26n.pt`, chưa prune) | 0.387 |
-| Ngay sau prune (chưa finetune) | ~0.0002 |
-| Finetune epoch 65 | 0.340 |
-| Finetune epoch 70+ | 0.36+ (đang tiệm cận baseline) |
+| Giai đoạn                               | mAP50-95                       |
+| --------------------------------------- | ------------------------------ |
+| Baseline gốc (`yolo26n.pt`, chưa prune) | 0.387                          |
+| Ngay sau prune (chưa finetune)          | ~0.0002                        |
+| Finetune epoch 65                       | 0.340                          |
+| Finetune epoch 70+                      | 0.36+ (đang tiệm cận baseline) |
 
 Khớp đúng mẫu hình đã thấy ở báo cáo YOLOv8 (mục 4) — mAP sau prune gần 0,
 nhưng phục hồi rõ ràng và ổn định qua finetune, đạt ~88-93% mAP baseline
@@ -176,4 +176,3 @@ YOLOv8s như báo cáo cũ.
   nhất (teacher=yolo26x) cho thấy finetune vượt distill từ epoch 5-6, khác
   với lần chạy trước đó (teacher=yolo26s) — nghi ngờ do capacity gap
   teacher-student quá lớn với yolo26x, cần test thêm để xác nhận xu hướng.
-
