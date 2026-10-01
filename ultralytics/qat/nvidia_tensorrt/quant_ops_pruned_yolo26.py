@@ -1,6 +1,6 @@
 """Quantized forward methods cho các module pruned YOLO26 (NVIDIA TensorRT QAT).
 
-Port từ repo tham chiếu (``Pruned-QAT-for-YOLOv8-.../quant_ops_pruned.py``, viết cho
+Port từ repo than chiếu (``Pruned-QAT-for-YOLOv8-.../quant_ops_pruned.py``, viết cho
 YOLOv8). Khác biệt chính so với bản gốc — xem ``PLAN_QAT.md`` mục 1.3:
 
 - ``C2fPruned`` (YOLOv8, ``.chunk(2, 1)``) không tồn tại trong YOLO26. Thay bằng
@@ -86,8 +86,8 @@ class QuantAdd(torch.nn.Module, _utils.QuantMixin):
 class QuantC3k2SplitPruned(torch.nn.Module):
     """Quantized split cho C3k2Pruned/C3k2C3kPruned/C3k2AttnPruned.
 
-    ``torch.split`` với sections tùy ý (bất đối xứng sau pruning, vd [80, 40]),
-    giống ``QuantC2fSplitPruned`` của repo tham chiếu nhưng đổi tên cho khớp YOLO26.
+    ``torch.split`` với sections tùy ý (bất đối xứng sau pruning, vd [80, 40]), giống ``QuantC2fSplitPruned`` của repo
+    than chiếu nhưng đổi tên cho khớp YOLO26.
     """
 
     def __init__(self, split_sections):
@@ -137,20 +137,18 @@ def quant_module_change_pruned_yolo26(model):
     """Thêm quantization modules vào pruned YOLO26 model.
 
     Quét tất cả modules và thay forward method bằng phiên bản quantized:
-      - C3k2Pruned/C3k2C3kPruned/C3k2AttnPruned → thêm QuantC3k2SplitPruned
-      - BottleneckPruned → thêm QuantAdd (chỉ khi có residual, ``module.add``)
-      - Concat → thêm QuantConcat
-      - Upsample → thêm QuantUpsample
+    - C3k2Pruned/C3k2C3kPruned/C3k2AttnPruned → thêm QuantC3k2SplitPruned
+    - BottleneckPruned → thêm QuantAdd (chỉ khi có residual, ``module.add``)
+    - Concat → thêm QuantConcat
+    - Upsample → thêm QuantUpsample
 
-    C2PSAPruned/C3k2AttnPruned nội bộ (Attention) và DetectPruned KHÔNG được xử lý
-    ở đây — quantizer Conv2d bên trong chúng vẫn được thêm bởi
-    ``quant_modules.initialize()`` (chạy trước hàm này), việc disable chúng để giữ
-    FP32 nằm ở ``_skip_attention_quantizers``/``_skip_detect_quantizers_yolo26``
-    trong ``qat_trainer_yolo26.py`` — tách biệt "thêm op quantize" và "bật/tắt
-    quantizer" cho rõ trách nhiệm.
+    C2PSAPruned/C3k2AttnPruned nội bộ (Attention) và DetectPruned KHÔNG được xử lý ở đây — quantizer Conv2d bên trong
+    chúng vẫn được thêm bởi ``quant_modules.initialize()`` (chạy trước hàm này), việc disable chúng để giữ FP32 nằm ở
+    ``_skip_attention_quantizers``/``_skip_detect_quantizers_yolo26`` trong ``qat_trainer_yolo26.py`` — tách biệt "thêm
+    op quantize" và "bật/tắt quantizer" cho rõ trách nhiệm.
 
-    Lưu ý: ``nn.Conv2d`` đã được thay bằng ``QuantConv2d`` qua
-    ``quant_modules.initialize()`` trước khi gọi hàm này, nên không cần xử lý Conv ở đây.
+    Lưu ý: ``nn.Conv2d`` đã được thay bằng ``QuantConv2d`` qua ``quant_modules.initialize()`` trước khi gọi hàm này, nên
+    không cần xử lý Conv ở đây.
     """
     for name, module in model.named_modules():
         cls_name = module.__class__.__name__
@@ -161,12 +159,11 @@ def quant_module_change_pruned_yolo26(model):
                 module.c3k2splitop = QuantC3k2SplitPruned(module.cv1_split_sections)
             module.__class__.forward = c3k2_pruned_quant_forward
 
-        if cls_name == "BottleneckPruned":
-            if module.add:
-                if not hasattr(module, "addop"):
-                    print(f"Add QuantAdd to {name}")
-                    module.addop = QuantAdd(module.add)
-                module.__class__.forward = bottleneck_pruned_quant_forward
+        if cls_name == "BottleneckPruned" and module.add:
+            if not hasattr(module, "addop"):
+                print(f"Add QuantAdd to {name}")
+                module.addop = QuantAdd(module.add)
+            module.__class__.forward = bottleneck_pruned_quant_forward
 
         if cls_name == "Concat":
             if not hasattr(module, "concatop"):
