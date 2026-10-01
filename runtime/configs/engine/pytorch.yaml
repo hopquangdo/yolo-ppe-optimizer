@@ -2,6 +2,6 @@
 backend: pytorch
 imgsz: 640
 conf: 0.25
-iou: 0.7          # NMS IoU (ignored by NMS-free end2end heads such as YOLO26)
-device: null      # null = auto, "cpu", "0"
+iou: 0.7 # NMS IoU (ignored by NMS-free end2end heads such as YOLO26)
+device: null # null = auto, "cpu", "0"
 half: false
