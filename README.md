@@ -102,30 +102,30 @@ Tối ưu hoá và nén mô hình YOLO26 cho nhận diện thiết bị bảo h�
 
 Nhánh **Fine-tune** và nhánh **Distillation** cùng xuất phát từ một pruned baseline duy nhất ở mỗi tỷ lệ prune, đảm bảo so sánh công bằng giữa hai phương pháp phục hồi.
 
-
 ---
 
 ## Cài đặt
 
 ### Yêu cầu
 
-| Thành phần | Phiên bản |
-|---|---|
-| Python | 3.10+ |
-| PyTorch | TODO |
-| Ultralytics (YOLO26) | TODO |
-| JetPack SDK (Jetson Orin NX) | TODO |
-| CUDA / TensorRT | TODO |
+| Thành phần                   | Phiên bản |
+| ---------------------------- | --------- |
+| Python                       | 3.10+     |
+| PyTorch                      | TODO      |
+| Ultralytics (YOLO26)         | TODO      |
+| JetPack SDK (Jetson Orin NX) | TODO      |
+| CUDA / TensorRT              | TODO      |
 
 ### Clone & cài đặt
 
 ```bash
-git clone https://github.com/<org>/ppe-yolo26-edge.git
+git clone https://github.com/ < org > /ppe-yolo26-edge.git
 cd ppe-yolo26-edge
 pip install -r requirements.txt
 ```
 
-### Môi trường Jetson 
+### Môi trường Jetson
+
 ```bash
 # Container cho training / QAT
 docker pull nvcr.io/nvidia/l4t-pytorch:<tag-khớp-jetpack>
@@ -162,7 +162,7 @@ python export/export_trt.py --weights <model>.pt --int8
 python benchmark/run_benchmark.py --engine <model>.engine --device orin-nx
 ```
 
-> Các lệnh trên là khung tham chiếu — cập nhật đúng tên tham số khi hoàn thiện code từng module.
+> Các lệnh trên là khung than chiếu — cập nhật đúng tên than số khi hoàn thiện code từng module.
 
 ---
 
@@ -170,55 +170,55 @@ python benchmark/run_benchmark.py --engine <model>.engine --device orin-nx
 
 ### 1. Optimization search
 
-| Thuật toán | mAP50 | mAP50-95 | Thời gian search |
-|---|---|---|---|
-| Baseline (default) | – | – | – |
-| SHO | – | – | – |
-| PSO | – | – | – |
-| GA | – | – | – |
+| Thuật toán         | mAP50 | mAP50-95 | Thời gian search |
+| ------------------ | ----- | -------- | ---------------- |
+| Baseline (default) | –     | –        | –                |
+| SHO                | –     | –        | –                |
+| PSO                | –     | –        | –                |
+| GA                 | –     | –        | –                |
 
 ### 2. Structured pruning (trước phục hồi)
 
 Kết quả pruning thuần (BN-gamma sparsity training + structured channel pruning), trước khi áp dụng bất kỳ phương pháp phục hồi nào — xem chi tiết tại `PLAN_PRUNE.md`.
 
-| Tỷ lệ prune | mAP50 | mAP50-95 | Size (MB) | Δ tham số |
-|---|---|---|---|---|
-| 20% | – | – | – | – |
-| 40% | – | – | – | – |
-| 60% | – | – | – | – |
+| Tỷ lệ prune | mAP50 | mAP50-95 | Size (MB) | Δ than số |
+| ----------- | ----- | -------- | --------- | --------- |
+| 20%         | –     | –        | –         | –         |
+| 40%         | –     | –        | –         | –         |
+| 60%         | –     | –        | –         | –         |
 
 ### 3. Fine-tune sau pruning
 
 | Tỷ lệ prune | mAP50 | mAP50-95 | Size (MB) | Δ so với baseline |
-|---|---|---|---|---|
-| 20% | – | – | – | – |
-| 40% | – | – | – | – |
-| 60% | – | – | – | – |
+| ----------- | ----- | -------- | --------- | ----------------- |
+| 20%         | –     | –        | –         | –                 |
+| 40%         | –     | –        | –         | –                 |
+| 60%         | –     | –        | –         | –                 |
 
 ### 4. Distillation sau pruning
 
 Teacher = optimized baseline (YOLO26 chưa prune); student = pruned baseline ở mỗi tỷ lệ. Xem công thức loss và thiết kế tại `PLAN_DISTILL.md`.
 
 | Tỷ lệ prune | Teacher | mAP50 | mAP50-95 | Size (MB) | Δ so với baseline |
-|---|---|---|---|---|---|
-| 20% | – | – | – | – | – |
-| 40% | – | – | – | – | – |
-| 60% | – | – | – | – | – |
+| ----------- | ------- | ----- | -------- | --------- | ----------------- |
+| 20%         | –       | –     | –        | –         | –                 |
+| 40%         | –       | –     | –        | –         | –                 |
+| 60%         | –       | –     | –        | –         | –                 |
 
 Fine-tune và Distillation cùng xuất phát từ pruned baseline tương ứng ở mục 2, cho phép so sánh trực tiếp hai chiến lược phục hồi ở bảng 3 và 4.
 
 ### 5. Benchmark trên Jetson Orin NX
 
-| Model | Format | Size (MB) | FPS | Latency (ms) | mAP50 |
-|---|---|---|---|---|---|
-| Optimized baseline (FP32) | PyTorch | – | – | – | – |
-| Optimized baseline (INT8) | TensorRT | – | – | – | – |
-| Fine-tune + QAT (best) | TensorRT | – | – | – | – |
-| Distillation + QAT (best) | TensorRT | – | – | – | – |
+| Model                     | Format   | Size (MB) | FPS | Latency (ms) | mAP50 |
+| ------------------------- | -------- | --------- | --- | ------------ | ----- |
+| Optimized baseline (FP32) | PyTorch  | –         | –   | –            | –     |
+| Optimized baseline (INT8) | TensorRT | –         | –   | –            | –     |
+| Fine-tune + QAT (best)    | TensorRT | –         | –   | –            | –     |
+| Distillation + QAT (best) | TensorRT | –         | –   | –            | –     |
 
 **Model production:** _TODO — điền model được chọn triển khai + lý do (trade-off tốt nhất)._
 
-> Pipeline nén mô hình (pruning → phục hồi → QAT → TensorRT INT8) tham khảo thiết kế
+> Pipeline nén mô hình (pruning → phục hồi → QAT → TensorRT INT8) than khảo thiết kế
 > và kết quả benchmark từ nghiên cứu waste-detection trên Jetson (YOLOv8s, pruning +
 > QAT song song, TensorRT INT8 đạt mAP50-95=0.782, tăng 69.1% FPS so với FP32) — xem
 > mục [Trích dẫn](#trích-dẫn). Điểm khác biệt: đồ án này chạy pruning và QAT **nối
@@ -228,12 +228,12 @@ Fine-tune và Distillation cùng xuất phát từ pruned baseline tương ứng
 
 ## Dataset
 
-| Thuộc tính | Giá trị |
-|---|---|
-| Nguồn dữ liệu | TODO |
-| Số ảnh (train / val / test) | TODO |
-| Số lớp | TODO |
-| Kích thước ảnh | TODO |
+| Thuộc tính                  | Giá trị |
+| --------------------------- | ------- |
+| Nguồn dữ liệu               | TODO    |
+| Số ảnh (train / val / test) | TODO    |
+| Số lớp                      | TODO    |
+| Kích thước ảnh              | TODO    |
 
 ---
 
@@ -262,4 +262,3 @@ Phát hành theo giấy phép [MIT](LICENSE) — cập nhật nếu trường/kh
   url     = {https://docs.lib.purdue.edu/cib-conferences/vol2/iss1/48/}
 }
 ```
-

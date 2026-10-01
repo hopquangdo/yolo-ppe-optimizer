@@ -1,12 +1,13 @@
-# Survey: Các phương pháp tìm cấu hình siêu tham số tối ưu cho YOLO26
+# Survey: Các phương pháp tìm cấu hình siêu than số tối ưu cho YOLO26
 
 Trạng thái: **survey, chưa chốt phương án**. Bổ sung cho `PLAN_SHO.md` —
-tài liệu đó đã lock vào SHO (theo luận án tham khảo); tài liệu này khảo sát
+tài liệu đó đã lock vào SHO (theo luận án than khảo); tài liệu này khảo sát
 rộng hơn để có cơ sở quyết định giữ SHO, đổi phương án, hay dùng SHO kết
 hợp phương án khác (ensemble/so sánh).
 
 Tiêu chí đánh giá (áp cho đúng ràng buộc của đồ án — không đánh giá chung
 chung):
+
 - **Hiệu quả mẫu (sample efficiency)** — số lần cần train/đánh giá để hội tụ
   tới cấu hình tốt. Quan trọng nhất vì máy hiện tại **CPU-only**, mỗi lần
   đánh giá dù rút ngắn epoch vẫn tốn phút-giờ.
@@ -16,21 +17,21 @@ chung):
 - **Song song hoá** — các ứng viên trong 1 vòng có độc lập nhau không (chạy
   song song nhiều process/GPU khi có).
 - **Độ phức tạp cài đặt** — tự viết từ đầu hay có thư viện production-ready.
-- **Khớp tài liệu tham khảo** — có đối chiếu được với luận án gốc
+- **Khớp tài liệu than khảo** — có đối chiếu được với luận án gốc
   (SHO-YOLOv5) không, phục vụ mục đích học thuật của đồ án.
 
 ## 1. Bảng so sánh
 
-| Phương pháp | Họ thuật toán | Hiệu quả mẫu | Dừng sớm | Song song | Cài đặt | Khớp luận án |
-|---|---|---|---|---|---|---|
-| **SHO** (Seahorse Optimizer) | Metaheuristic quần thể | Thấp-trung bình — khám phá phần lớn ngẫu nhiên (Lévy flight, Brownian) | Không có cơ chế sẵn | Có (1 thế hệ độc lập) | Tự viết ~150 dòng (đã có mã giả) | **100%** — đúng thuật toán luận án dùng |
-| **PSO** (Particle Swarm) | Metaheuristic quần thể | Thấp-trung bình, tương tự SHO | Không | Có | Đơn giản hơn SHO (không có pha sinh sản) | Không — luận án không dùng, nhưng cùng họ, dễ so sánh chéo |
-| **GA** (Genetic Algorithm) | Metaheuristic quần thể | Thấp-trung bình | Không (trừ khi tự thêm) | Có | Trung bình (cần thiết kế crossover/mutation) | Không, nhưng README đã liệt kê GA như 1 lựa chọn |
-| **GWO** (Grey Wolf), **WOA** (Whale) | Metaheuristic quần thể | Tương tự SHO/PSO | Không | Có | Tương tự SHO | Không, cùng họ "nature-inspired 2010s" như SHO |
-| **CMA-ES** | Tiến hoá thích nghi hiệp phương sai | Cao hơn hẳn nhóm trên với bài toán liên tục ít chiều (~18 chiều ở đây là vừa tầm) | Không có sẵn | Có | Có thư viện (`cma` PyPI), không cần tự viết | Không |
-| **Random Search** | Baseline | Thấp, nhưng là baseline bắt buộc phải có để chứng minh SHO thực sự tốt hơn ngẫu nhiên | Không | Có, dễ nhất | Rất đơn giản (~10 dòng) | Không, nhưng **nên có** làm đối chứng cho mọi phương án khác |
-| **Bayesian Opt (TPE, Optuna)** | Model-based (surrogate) | **Cao** — học phân phối tốt từ lịch sử, ít lần thử hơn hẳn nhóm quần thể khi budget nhỏ | **Có sẵn** (Hyperband/ASHA pruner tích hợp) | Có (Optuna hỗ trợ distributed) | **Thấp** — `pip install optuna`, vài chục dòng wrapper | Không |
-| **`model.tune()` của ultralytics** | Wrapper quanh GA nội bộ (mutation-based) | Trung bình | Không | Giới hạn (chạy tuần tự theo mặc định) | **Thấp nhất** — có sẵn, gọi 1 dòng | Không |
+| Phương pháp                          | Họ thuật toán                            | Hiệu quả mẫu                                                                            | Dừng sớm                                    | Song song                             | Cài đặt                                                | Khớp luận án                                                 |
+| ------------------------------------ | ---------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
+| **SHO** (Seahorse Optimizer)         | Metaheuristic quần thể                   | Thấp-trung bình — khám phá phần lớn ngẫu nhiên (Lévy flight, Brownian)                  | Không có cơ chế sẵn                         | Có (1 thế hệ độc lập)                 | Tự viết ~150 dòng (đã có mã giả)                       | **100%** — đúng thuật toán luận án dùng                      |
+| **PSO** (Particle Swarm)             | Metaheuristic quần thể                   | Thấp-trung bình, tương tự SHO                                                           | Không                                       | Có                                    | Đơn giản hơn SHO (không có pha sinh sản)               | Không — luận án không dùng, nhưng cùng họ, dễ so sánh chéo   |
+| **GA** (Genetic Algorithm)           | Metaheuristic quần thể                   | Thấp-trung bình                                                                         | Không (trừ khi tự thêm)                     | Có                                    | Trung bình (cần thiết kế crossover/mutation)           | Không, nhưng README đã liệt kê GA như 1 lựa chọn             |
+| **GWO** (Grey Wolf), **WOA** (Whale) | Metaheuristic quần thể                   | Tương tự SHO/PSO                                                                        | Không                                       | Có                                    | Tương tự SHO                                           | Không, cùng họ "nature-inspired 2010s" như SHO               |
+| **CMA-ES**                           | Tiến hoá thích nghi hiệp phương sai      | Cao hơn hẳn nhóm trên với bài toán liên tục ít chiều (~18 chiều ở đây là vừa tầm)       | Không có sẵn                                | Có                                    | Có thư viện (`cma` PyPI), không cần tự viết            | Không                                                        |
+| **Random Search**                    | Baseline                                 | Thấp, nhưng là baseline bắt buộc phải có để chứng minh SHO thực sự tốt hơn ngẫu nhiên   | Không                                       | Có, dễ nhất                           | Rất đơn giản (~10 dòng)                                | Không, nhưng **nên có** làm đối chứng cho mọi phương án khác |
+| **Bayesian Opt (TPE, Optuna)**       | Model-based (surrogate)                  | **Cao** — học phân phối tốt từ lịch sử, ít lần thử hơn hẳn nhóm quần thể khi budget nhỏ | **Có sẵn** (Hyperband/ASHA pruner tích hợp) | Có (Optuna hỗ trợ distributed)        | **Thấp** — `pip install optuna`, vài chục dòng wrapper | Không                                                        |
+| **`model.tune()` của ultralytics**   | Wrapper quanh GA nội bộ (mutation-based) | Trung bình                                                                              | Không                                       | Giới hạn (chạy tuần tự theo mặc định) | **Thấp nhất** — có sẵn, gọi 1 dòng                     | Không                                                        |
 
 ## 2. Phân tích theo đúng ràng buộc của đồ án
 
@@ -80,7 +81,7 @@ implement mà không đổi kết luận.
 
 ## 4. Việc cần làm nếu triển khai theo mục 3
 
-- `objective.py` (đã plan) cần tách phần "giải mã vector tham số ↔ dict
+- `objective.py` (đã plan) cần tách phần "giải mã vector than số ↔ dict
   train kwargs" ra khỏi phần thuật toán tìm kiếm, để dùng chung được cho
   cả `sho.py` (nhận `x: np.ndarray` trong `[LB, UB]`) và Optuna (nhận
   `trial: optuna.Trial`, gọi `trial.suggest_float(...)` theo cùng bảng
