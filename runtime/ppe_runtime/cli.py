@@ -1,8 +1,8 @@
 """ppe-runtime entrypoint.
 
-    ppe-runtime run   --source video.mp4 [--weights w.pt] [--save out.mp4] [--set engine.conf=0.4 ...]
-    ppe-runtime bench --weights a.pt b.onnx c.engine [--source video.mp4] [--json out.json]
-    ppe-runtime agent                 # config from Edge Agent env (RUNTIME_ID, MODEL_PATH, RUNTIME_CONFIG, ...)
+ppe-runtime run   --source video.mp4 [--weights w.pt] [--save out.mp4] [--set engine.conf=0.4 ...]
+ppe-runtime bench --weights a.pt b.onnx c.engine [--source video.mp4] [--json out.json]
+ppe-runtime agent                 # config from Edge Agent env (RUNTIME_ID, MODEL_PATH, RUNTIME_CONFIG, ...)
 """
 
 from __future__ import annotations
@@ -28,8 +28,14 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--engine", default=None, help="engine config name: pytorch | onnx | tensorrt")
     p.add_argument("--tracker", default=None, help="bytetrack | botsort | none | path.yaml")
     p.add_argument("--device", default=None)
-    p.add_argument("--set", dest="overrides", action="append", default=[], metavar="KEY=VALUE",
-                   help="override any config field, e.g. engine.conf=0.4 or ppe.rules.min_frames=3")
+    p.add_argument(
+        "--set",
+        dest="overrides",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="override any config field, e.g. engine.conf=0.4 or ppe.rules.min_frames=3",
+    )
     p.add_argument("--log-level", default=None)
 
 
@@ -88,8 +94,12 @@ def cmd_run(args: argparse.Namespace) -> int:
     if writer and getattr(runner.source, "fps", None):
         writer.fps = runner.source.fps
     _install_signals(runner)
-    logger.info("Running %s on %s (tracking=%s)", runner.pipeline.engine.backend, cfg.source,
-                cfg.tracking.tracker_type if cfg.tracking else "off")
+    logger.info(
+        "Running %s on %s (tracking=%s)",
+        runner.pipeline.engine.backend,
+        cfg.source,
+        cfg.tracking.tracker_type if cfg.tracking else "off",
+    )
     try:
         metrics = runner.run()
     finally:
@@ -136,13 +146,16 @@ def agent_overrides(env: dict[str, str]) -> tuple[dict[str, Any], str]:
         overrides["ppe"] = {"rules": rc["ppe_rules"]}
     if isinstance(rc.get("classes"), dict):
         overrides.setdefault("ppe", {})["classes"] = {"names": rc["classes"]}
-    overrides["sinks"] = [{
-        "type": "agent",
-        "agent_url": env.get("AGENT_URL", "http://localhost:8081"),
-        "runtime_id": env["RUNTIME_ID"],
-        "node_id": env["NODE_ID"],
-        "api_key": env.get("AGENT_API_KEY") or None,
-    }] + list(rc.get("extra_sinks", []))
+    overrides["sinks"] = [
+        {
+            "type": "agent",
+            "agent_url": env.get("AGENT_URL", "http://localhost:8081"),
+            "runtime_id": env["RUNTIME_ID"],
+            "node_id": env["NODE_ID"],
+            "api_key": env.get("AGENT_API_KEY") or None,
+        },
+        *list(rc.get("extra_sinks", [])),
+    ]
     return overrides, env.get("LOG_LEVEL", "INFO")
 
 
@@ -157,8 +170,9 @@ def cmd_agent(args: argparse.Namespace) -> int:
         cfg.engine = type(cfg.engine).model_validate({**cfg.engine.model_dump(), **engine_fields})
     runner = Runner.from_config(cfg)
     _install_signals(runner)
-    logger.info("Agent-managed runtime %s: %s on %s", os.environ.get("RUNTIME_ID"), runner.pipeline.engine.backend,
-                cfg.source)
+    logger.info(
+        "Agent-managed runtime %s: %s on %s", os.environ.get("RUNTIME_ID"), runner.pipeline.engine.backend, cfg.source
+    )
     runner.run()
     return 0
 
