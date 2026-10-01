@@ -16,7 +16,7 @@ from ppe_runtime.pipeline.types import FrameResult, Timings
 from ppe_runtime.ppe import Associator, RuleEngine
 from ppe_runtime.ppe.constants import EVENT_SOURCE_LOST, EVENT_SOURCE_RESTORED, EVENT_STARTED, EVENT_STOPPED
 from ppe_runtime.tracking import Tracker, create_tracker
-from ppe_runtime.utils.config import RuntimeConfig, RulesConfig
+from ppe_runtime.utils.config import RulesConfig, RuntimeConfig
 from ppe_runtime.utils.metrics import RuntimeMetrics
 
 logger = logging.getLogger(__name__)
@@ -72,8 +72,15 @@ class Runner:
     `target_fps`, and skip to the newest frame when inference falls behind.
     """
 
-    def __init__(self, pipeline: Pipeline, source: VideoSource | StreamSource, sink: Sink,
-                 target_fps: float = 0.0, report_interval_sec: float = 5.0, on_frame=None) -> None:
+    def __init__(
+        self,
+        pipeline: Pipeline,
+        source: VideoSource | StreamSource,
+        sink: Sink,
+        target_fps: float = 0.0,
+        report_interval_sec: float = 5.0,
+        on_frame=None,
+    ) -> None:
         self.pipeline = pipeline
         self.source = source
         self.sink = sink
@@ -87,8 +94,9 @@ class Runner:
     def from_config(cls, cfg: RuntimeConfig, on_frame=None, max_frames: int | None = None) -> Runner:
         pipeline = Pipeline.from_config(cfg)
         sink = MultiSink([create_sink(s) for s in cfg.sinks])
-        return cls(pipeline, open_source(cfg.source, max_frames), sink, cfg.target_fps, cfg.report_interval_sec,
-                   on_frame)
+        return cls(
+            pipeline, open_source(cfg.source, max_frames), sink, cfg.target_fps, cfg.report_interval_sec, on_frame
+        )
 
     def stop(self) -> None:
         self._stop.set()
@@ -98,8 +106,12 @@ class Runner:
         interval = 1.0 / self.target_fps if live and self.target_fps else 0.0
         self.pipeline.warmup()
         source_name = str(getattr(self.source, "source", None) or getattr(self.source, "path", ""))
-        self.sink.on_event(EVENT_STARTED, "PPE runtime started", "INFO",
-                           {"backend": self.pipeline.engine.backend, "source": source_name})
+        self.sink.on_event(
+            EVENT_STARTED,
+            "PPE runtime started",
+            "INFO",
+            {"backend": self.pipeline.engine.backend, "source": source_name},
+        )
         next_report = time.monotonic() + self.report_interval
         was_connected, last_dropped = True, 0
         try:
@@ -131,8 +143,9 @@ class Runner:
                     self._stop.wait(max(0.0, interval - (time.monotonic() - started)))
         finally:
             self.sink.on_metrics(self.metrics.snapshot(camera_connected=self.source.connected))
-            self.sink.on_event(EVENT_STOPPED, "PPE runtime stopped", "INFO",
-                               {"violations_total": self.metrics.violations_total})
+            self.sink.on_event(
+                EVENT_STOPPED, "PPE runtime stopped", "INFO", {"violations_total": self.metrics.violations_total}
+            )
             self.source.close()
             self.sink.close()
             self.pipeline.close()
