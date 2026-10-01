@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 class TensorRTDetector(Detector):
     """Native TensorRT backend (TRT 8.x and 10.x). Device buffers are torch CUDA tensors, so no pycuda is needed.
 
-    Accepts ultralytics-exported `.engine` files (4-byte length + JSON metadata header) and bare `.plan` files.
-    Engines are GPU/TensorRT-version specific: build them on the device that runs them.
+    Accepts ultralytics-exported `.engine` files (4-byte length + JSON metadata header) and bare `.plan` files. Engines
+    are GPU/TensorRT-version specific: build them on the device that runs them.
     """
 
     backend = "tensorrt"
