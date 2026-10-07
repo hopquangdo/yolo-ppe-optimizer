@@ -1,7 +1,7 @@
 import numpy as np
 
-from optimization.sho import sho
 from optimization.objective import build_yolo_objective
+from optimization.sho import sho
 
 
 def test_sho_minimizes_sphere():
@@ -39,8 +39,9 @@ def test_yolo_objective_decodes_candidate():
         models.append((path, model))
         return model
 
-    objective = build_yolo_objective("model.pt", "data.yaml", {"lr0": (0.0, 1.0), "mosaic": (0.0, 1.0)}, 2, 320,
-                                     model_factory=factory)
+    objective = build_yolo_objective(
+        "model.pt", "data.yaml", {"lr0": (0.0, 1.0), "mosaic": (0.0, 1.0)}, 2, 320, model_factory=factory
+    )
     assert objective(np.array([0.2, 0.8])) == 0.25
     assert models[0][0] == "model.pt"
     assert models[0][1].calls[0]["lr0"] == 0.2
