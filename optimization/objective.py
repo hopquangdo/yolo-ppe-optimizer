@@ -1,4 +1,5 @@
 """Objective functions for SHO-based YOLO hyperparameter search."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -23,9 +24,8 @@ def build_yolo_objective(
 ) -> Callable[[np.ndarray], float]:
     """Build a minimization objective returning ``1 - mAP50-95``.
 
-    A fresh YOLO instance is created for every candidate, so each candidate
-    starts from the same checkpoint rather than continuing a previous run.
-    ``model_factory`` is injectable for fast unit tests.
+    A fresh YOLO instance is created for every candidate, so each candidate starts from the same checkpoint rather than
+    continuing a previous run. ``model_factory`` is injectable for fast unit tests.
     """
     names = list(search_space)
     if not names or proxy_epochs < 1 or imgsz < 1:

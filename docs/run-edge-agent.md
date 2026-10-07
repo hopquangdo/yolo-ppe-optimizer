@@ -39,23 +39,23 @@ The returned **`id`** is what goes in `DEVICE_ID` below.
 name: ai-edge-ops-edge
 
 services:
-  edge-agent:
-    image: registry.example.com/ai-edge-ops/edge-agent:1.0
-    env_file: .env
-    ports:
-      - "9100:9100"
-    volumes:
-      - edge_state:/var/lib/edge-agent            # desired/reported state + downloaded models
-      - ./videos:/media:ro                        # local video files for testing/replay
-      # - ./certs:/certs:ro                        # if using MQTT TLS
-    restart: unless-stopped
-    # --- Jetson: GPU + camera passthrough (use the :1.0-jetson image) ---
-    # runtime: nvidia
-    # devices:
-    #   - "/dev/video0:/dev/video0"
+    edge-agent:
+        image: registry.example.com/ai-edge-ops/edge-agent:1.0
+        env_file: .env
+        ports:
+            - "9100:9100"
+        volumes:
+            - edge_state:/var/lib/edge-agent # desired/reported state + downloaded models
+            - ./videos:/media:ro # local video files for testing/replay
+            # - ./certs:/certs:ro                        # if using MQTT TLS
+        restart: unless-stopped
+        # --- Jetson: GPU + camera passthrough (use the :1.0-jetson image) ---
+        # runtime: nvidia
+        # devices:
+        #   - "/dev/video0:/dev/video0"
 
 volumes:
-  edge_state:
+    edge_state:
 ```
 
 ### `.env`
@@ -123,7 +123,7 @@ OpenCV:
 ```bash
 pip install -e "app/backend/edge_agent[inference]"
 CAMERAS__0__ID=demo CAMERAS__0__SOURCE=/absolute/path/demo.mp4 \
-CAMERAS__0__LOOP=true edge-agent
+  CAMERAS__0__LOOP=true edge-agent
 ```
 
 ---
@@ -131,7 +131,7 @@ CAMERAS__0__LOOP=true edge-agent
 ## 3. Start
 
 ```bash
-docker compose pull        # get the image
+docker compose pull # get the image
 docker compose up -d
 ```
 
@@ -143,16 +143,16 @@ curl http://localhost:9100/status
 
 ```json
 {
-  "success": true,
-  "data": {
-    "device_id": "42",
-    "runtime_status": "idle",
-    "active_model_version_id": null,
-    "desired_model_version_id": null,
-    "in_sync": true,
-    "runtime_loaded": false,
-    "cameras": ["bay-1"]
-  }
+    "success": true,
+    "data": {
+        "device_id": "42",
+        "runtime_status": "idle",
+        "active_model_version_id": null,
+        "desired_model_version_id": null,
+        "in_sync": true,
+        "runtime_loaded": false,
+        "cameras": ["bay-1"]
+    }
 }
 ```
 
@@ -179,21 +179,21 @@ The server sends a `deploy_model` command; the agent downloads the artifact
 (checksum-verified), loads it, and reports back. Follow along:
 
 ```bash
-curl http://localhost:9100/status     # runtime_status: applying -> active
+curl http://localhost:9100/status # runtime_status: applying -> active
 ```
 
 ---
 
 ## 5. Local API — `http://<device>:9100`
 
-| Method | Path | |
-|---|---|---|
-| GET | `/health` | liveness probe |
-| GET | `/status` | runtime state, active vs desired model, `in_sync`, cameras |
-| GET | `/config` | current inference config |
-| PUT | `/config` | local override (until the server pushes a new config) |
-| GET | `/cameras` | configured cameras |
-| POST | `/model/reconcile` | re-apply the desired model now |
+| Method | Path               |                                                            |
+| ------ | ------------------ | ---------------------------------------------------------- |
+| GET    | `/health`          | liveness probe                                             |
+| GET    | `/status`          | runtime state, active vs desired model, `in_sync`, cameras |
+| GET    | `/config`          | current inference config                                   |
+| PUT    | `/config`          | local override (until the server pushes a new config)      |
+| GET    | `/cameras`         | configured cameras                                         |
+| POST   | `/model/reconcile` | re-apply the desired model now                             |
 
 ---
 
@@ -202,9 +202,9 @@ curl http://localhost:9100/status     # runtime_status: applying -> active
 ```bash
 docker compose logs -f edge-agent
 docker compose restart edge-agent
-docker compose pull && docker compose up -d      # upgrade to a new image tag
-docker compose down                               # stop, keep state
-docker compose down -v                            # stop, wipe local state + models
+docker compose pull && docker compose up -d # upgrade to a new image tag
+docker compose down                         # stop, keep state
+docker compose down -v                      # stop, wipe local state + models
 ```
 
 The agent reconnects automatically. If the device drops, the broker's last-will
@@ -215,9 +215,9 @@ marks it `offline` on the server within the platform's offline threshold
 
 ## 7. Troubleshooting
 
-| Symptom | Check |
-|---|---|
-| device stays `offline` on server | `MQTT__HOST/PORT` reachable from the container; `DEVICE_ID` is the **numeric** id; `docker compose logs` for connection errors |
-| `runtime_status: failed` after deploy | artifact URL reachable from the device; checksum; disk space in the `edge_state` volume |
-| no violations | camera opening? (`logs`); `CAMERAS__0__SOURCE` correct; a model is `active` (`/status`) |
-| TLS handshake errors | cert paths mounted and readable; `MQTT__PORT=8883`; CA matches the broker |
+| Symptom                               | Check                                                                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| device stays `offline` on server      | `MQTT__HOST/PORT` reachable from the container; `DEVICE_ID` is the **numeric** id; `docker compose logs` for connection errors |
+| `runtime_status: failed` after deploy | artifact URL reachable from the device; checksum; disk space in the `edge_state` volume                                        |
+| no violations                         | camera opening? (`logs`); `CAMERAS__0__SOURCE` correct; a model is `active` (`/status`)                                        |
+| TLS handshake errors                  | cert paths mounted and readable; `MQTT__PORT=8883`; CA matches the broker                                                      |

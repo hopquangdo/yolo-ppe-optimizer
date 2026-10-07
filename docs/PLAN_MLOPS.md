@@ -41,10 +41,10 @@ Giống nhận xét ở `PLAN_EDGE_CLOUD.md` (mỗi loại dữ liệu một gia
 MLOps ở đây cũng nên tách theo 2 vòng đời khác nhau vì tần suất và rủi ro
 rất khác nhau:
 
-| Nhánh | Đối tượng | Tần suất | Rủi ro khi sai |
-|---|---|---|---|
-| **Model MLOps** | pipeline sparsity→prune→distill→QAT→export, checkpoint, benchmark mAP/latency | Mỗi lần đổi hyperparameter/thuật toán nén | Model tệ hơn deploy nhầm ra Jetson, không biết checkpoint nào đang chạy đâu |
-| **App MLOps (DevOps)** | `app/backend`, `app/frontend`, tương lai là Edge Agent | Mỗi lần sửa code app | Backend lỗi, downtime dashboard, không phải sai model |
+| Nhánh                  | Đối tượng                                                                     | Tần suất                                  | Rủi ro khi sai                                                              |
+| ---------------------- | ----------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------- |
+| **Model MLOps**        | pipeline sparsity→prune→distill→QAT→export, checkpoint, benchmark mAP/latency | Mỗi lần đổi hyperparameter/thuật toán nén | Model tệ hơn deploy nhầm ra Jetson, không biết checkpoint nào đang chạy đâu |
+| **App MLOps (DevOps)** | `app/backend`, `app/frontend`, tương lai là Edge Agent                        | Mỗi lần sửa code app                      | Backend lỗi, downtime dashboard, không phải sai model                       |
 
 Không trộn 2 pipeline CI này — ví dụ không chạy benchmark mAP (tốn GPU,
 chậm) trong CI của một PR chỉ sửa frontend.
@@ -59,21 +59,21 @@ liệu vi phạm nhạy cảm), và có sẵn Model Registry tích hợp — kh�
 công cụ thứ 3 riêng cho registry.
 
 - Log ở **mọi** bước của pipeline nén, không chỉ bước cuối:
-  - `sparsity training` (BN-gamma, `train_sparsity.py`): log `sr`, sparsity
-    ratio đạt được theo epoch, mAP.
-  - `prune.py`: log ratio, số param trước/sau, mAP ngay sau prune (chưa
-    finetune) — để tách riêng "prune làm mất bao nhiêu" khỏi "finetune bù
-    lại được bao nhiêu", đúng tinh thần benchmark distill-vs-finetune đã
-    đặt ra ở `PLAN_DISTILL.md`.
-  - `distill.py`/`finetune.py` (khi code xong): log theo cả 2 study A/B đã
-    định nghĩa trong `PLAN_DISTILL.md`, tag `study=A` / `study=B` để so
-    sánh trực tiếp trên MLflow UI.
-  - `qat_trainer_yolo26.py`: log mAP INT8 vs FP32 baseline, kèm artifact
-    `.engine` khi có GPU chạy được.
-  - `optimization/sho.py` / `optuna_search.py` (khi code xong, theo
-    `PLAN_SHO.md`/`PLAN_OPT_SURVEY.md`): mỗi trial là 1 MLflow run con,
-    nested dưới run cha của thuật toán search — so sánh SHO vs Optuna vs
-    Random Search ngay trên UI thay vì tự ghép CSV tay.
+    - `sparsity training` (BN-gamma, `train_sparsity.py`): log `sr`, sparsity
+      ratio đạt được theo epoch, mAP.
+    - `prune.py`: log ratio, số param trước/sau, mAP ngay sau prune (chưa
+      finetune) — để tách riêng "prune làm mất bao nhiêu" khỏi "finetune bù
+      lại được bao nhiêu", đúng tinh thần benchmark distill-vs-finetune đã
+      đặt ra ở `PLAN_DISTILL.md`.
+    - `distill.py`/`finetune.py` (khi code xong): log theo cả 2 study A/B đã
+      định nghĩa trong `PLAN_DISTILL.md`, tag `study=A` / `study=B` để so
+      sánh trực tiếp trên MLflow UI.
+    - `qat_trainer_yolo26.py`: log mAP INT8 vs FP32 baseline, kèm artifact
+      `.engine` khi có GPU chạy được.
+    - `optimization/sho.py` / `optuna_search.py` (khi code xong, theo
+      `PLAN_SHO.md`/`PLAN_OPT_SURVEY.md`): mỗi trial là 1 MLflow run con,
+      nested dưới run cha của thuật toán search — so sánh SHO vs Optuna vs
+      Random Search ngay trên UI thay vì tự ghép CSV tay.
 - **Không** trạng thái nào của pipeline được coi là "xong" nếu không có
   MLflow run tương ứng — kể cả run thất bại/CPU-only debug cũng log (đánh
   tag `env=cpu_debug`) để không lẫn với kết quả GPU thật.
@@ -121,7 +121,7 @@ sửa thư viện.
 
 - Backend: lint (ruff), test (pytest, cần fixture Postgres — dùng service
   container trong Actions), Alembic migration check (`alembic upgrade
-  head` chạy sạch trên DB rỗng).
+head` chạy sạch trên DB rỗng).
 - Frontend: `npm run build`, typecheck, lint.
 
 ### 4.2 Docker hoá — chưa có, cần làm trước khi nói "production"
