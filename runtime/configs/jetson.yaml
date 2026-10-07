@@ -1,6 +1,6 @@
 # Jetson defaults: TensorRT engine, ByteTrack (cheapest), stream paced to 15 FPS.
 engine: tensorrt
-weights: /models/yolo26n.engine    # MODEL_PATH from the Edge Agent overrides this
+weights: /models/yolo26n.engine # MODEL_PATH from the Edge Agent overrides this
 
 tracking: bytetrack
 
