@@ -39,7 +39,7 @@ def build_adapters(
     from ultralytics.utils.distill_utils import register_feature_hooks, remove_hooks
 
     device = next(student.parameters()).device
-    dummy = torch.zeros(1, 3, img_size, img_size, device=device)
+    t_device = next(teacher.parameters()).device  # teacher được load thẳng lên self.device (GPU) còn student vẫn ở CPU
 
     was_training_s, was_training_t = student.training, teacher.training
     student.eval()
@@ -48,8 +48,8 @@ def build_adapters(
     s_handles, s_feats = register_feature_hooks(student, layer_names)
     t_handles, t_feats = register_feature_hooks(teacher, layer_names)
     try:
-        student(dummy)
-        teacher(dummy)
+        student(torch.zeros(1, 3, img_size, img_size, device=device))
+        teacher(torch.zeros(1, 3, img_size, img_size, device=t_device))
     finally:
         remove_hooks(s_handles)
         remove_hooks(t_handles)
