@@ -31,6 +31,7 @@ from ultralytics.utils.distill_utils import (
     reg_kd_loss,
     remove_hooks,
 )
+from ultralytics.utils.distill_methods import DEFAULT_DIS, METHODS, PROJ_ATTR, build_projectors, parse_params
 from ultralytics.utils.tal import dist2bbox, make_anchors
 
 FEAT_LAYERS = ["model.16", "model.19", "model.22"]  # P3/P4/P5, xem PLAN.md mục 3
@@ -85,10 +86,20 @@ class DistillMixin:
         lambda_cwd: float = 50.0,
         temperature: float = 4.0,
         feat_layers: list[str] | None = None,
+        kd_method: str = "cwd_kd",
+        dis: float | None = None,
+        kd_params: dict | None = None,
     ) -> None:
         feat_layers = feat_layers or FEAT_LAYERS
         object.__setattr__(self, "_teacher", teacher)  # ẩn khỏi named_modules()/parameters()
-        self.distill_adapters = build_adapters(self, teacher, feat_layers)  # submodule thật, có thể train
+        self._kd_method, self._kd_params = kd_method, dict(kd_params or {})
+        self._dis = float(dis) if dis is not None else DEFAULT_DIS.get(kd_method, 6.0)
+        if kd_method == "cwd_kd":
+            self.distill_adapters = build_adapters(self, teacher, feat_layers)  # submodule thật, có thể train
+        elif kd_method in METHODS:
+            setattr(self, PROJ_ATTR, build_projectors(self, teacher, feat_layers))  # submodule thật, có thể train
+        else:
+            raise ValueError(f"kd_method '{kd_method}' không hợp lệ. Chọn: cwd_kd | {' | '.join(METHODS)}")
         self._feat_layers = feat_layers
         self._lambda_cwd = lambda_cwd
         self._temperature = temperature
@@ -146,6 +157,13 @@ class DistillMixin:
 
         teacher_preds = _teacher_forward_preds(self._teacher, batch["img"])  # điền self._teacher_feats
 
+        method = getattr(self, "_kd_method", "cwd_kd")
+        if method != "cwd_kd":  # builtin | ckd_b — quy ước loss của Ultralytics 8.4.152: dis * L * batch, cộng 1 lần
+            fn = METHODS[method]
+            raw = fn(self, teacher_preds) if method == "builtin" else fn(self, teacher_preds, self._kd_params)
+            dis_term = (raw * self._dis * batch["img"].shape[0]).reshape(1)
+            return torch.cat([task_loss.reshape(-1), dis_term]), loss_items
+
         student_head = _unwrap_preds(preds)
         teacher_head = _unwrap_preds(teacher_preds)
 
@@ -182,6 +200,11 @@ class DistillTrainer(DetectionTrainer):
       kd_temperature (float): nhiệt độ cho CWD/cls KD, mặc định 4.0.
       kd_alpha_max_epoch (int, tuỳ chọn): số epoch dùng cho lịch alpha cosine
         (PLAN.md 4.4); mặc định lấy theo ``epochs`` trong training args.
+      kd_method (str): ``cwd_kd`` (mặc định, CWD + response KD ở trên), ``builtin`` (KD tích hợp
+        Ultralytics 8.4.152) hoặc ``ckd_b`` (bản B: CrossKD + PKD + trọng số B2) —
+        xem ultralytics/utils/distill_methods.py và docs/DISTILL_BAN_B.md.
+      dis (float): hệ số loss cho ``builtin``/``ckd_b``; mặc định 6.0 (builtin) / 0.14 (ckd_b).
+      kd_params (dict | str JSON): tham số phụ cho ``ckd_b`` (w_feat, w_reg, w_o2o, beta, agree).
     """
 
     def __init__(self, cfg=DEFAULT_CFG, overrides: dict | None = None, _callbacks=None):
@@ -190,6 +213,10 @@ class DistillTrainer(DetectionTrainer):
         self.lambda_cwd = float(overrides.pop("lambda_cwd", 50.0))
         self.kd_temperature = float(overrides.pop("kd_temperature", 4.0))
         self.kd_alpha_max_epoch = overrides.pop("kd_alpha_max_epoch", None)
+        self.kd_method = overrides.pop("kd_method", "cwd_kd")
+        dis = overrides.pop("dis", None)
+        self.dis = float(dis) if dis is not None else DEFAULT_DIS.get(self.kd_method, 6.0)
+        self.kd_params = parse_params(overrides.pop("kd_params", None))
         if not self.teacher_weights:
             raise ValueError("DistillTrainer requires a 'teacher' checkpoint path.")
         super().__init__(cfg, overrides, _callbacks)
@@ -203,12 +230,14 @@ class DistillTrainer(DetectionTrainer):
 
         cls = DistillDetectionModelPruned if isinstance(model, DetectionModelPruned) else DistillDetectionModel
         model.__class__ = cls
-        model.attach_teacher(teacher, lambda_cwd=self.lambda_cwd, temperature=self.kd_temperature)
+        model.attach_teacher(teacher, lambda_cwd=self.lambda_cwd, temperature=self.kd_temperature,
+                             kd_method=self.kd_method, dis=self.dis, kd_params=self.kd_params)
         max_epoch = self.kd_alpha_max_epoch or getattr(self.args, "epochs", 100)
         model._kd_alpha_max_epoch = max_epoch
         LOGGER.info(
-            colorstr("yellow", f"Distillation enabled: teacher={self.teacher_weights}, "
-                     f"lambda_cwd={self.lambda_cwd}, T={self.kd_temperature}, kd_alpha_max_epoch={max_epoch}")
+            colorstr("yellow", f"Distillation enabled: kd_method={self.kd_method}, teacher={self.teacher_weights}, "
+                     + (f"lambda_cwd={self.lambda_cwd}, T={self.kd_temperature}, kd_alpha_max_epoch={max_epoch}"
+                        if self.kd_method == "cwd_kd" else f"dis={self.dis}, kd_params={self.kd_params}"))
         )
         return model
 
