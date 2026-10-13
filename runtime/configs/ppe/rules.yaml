@@ -1,21 +1,21 @@
 # PPE compliance rules. Names refer to class names after configs/ppe/classes.yaml is applied.
-person_classes: [person]           # detections treated as people (tracked + checked)
-required: [helmet, vest]           # items every person must wear
-aliases:                           # extra class names that count as a required item
+person_classes: [person] # detections treated as people (tracked + checked)
+required: [helmet, vest] # items every person must wear
+aliases: # extra class names that count as a required item
   helmet: [hardhat, hard_hat]
   vest: [safety_vest, hi_vis]
-negatives:                         # classes the model predicts for a missing item → that item
+negatives: # classes the model predicts for a missing item → that item
   no_helmet: helmet
   no_vest: vest
 
 association:
-  method: overlap                  # overlap (item area inside person) | iou | center (item center inside person)
-  min_score: 0.5                   # threshold for overlap/iou; ignored by center
+  method: overlap # overlap (item area inside person) | iou | center (item center inside person)
+  min_score: 0.5 # threshold for overlap/iou; ignored by center
 
-min_frames: 5                      # consecutive non-compliant frames (per track) before a violation is raised
-forget_after: 90                   # frames a track may be unseen before its state is dropped
+min_frames: 5 # consecutive non-compliant frames (per track) before a violation is raised
+forget_after: 90 # frames a track may be unseen before its state is dropped
 
-severity:                          # per missing item; a violation takes the highest
+severity: # per missing item; a violation takes the highest
   helmet: CRITICAL
   vest: WARNING
 default_severity: WARNING

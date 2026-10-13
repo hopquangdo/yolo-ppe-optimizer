@@ -1,7 +1,7 @@
 """Build a TensorRT engine for the native `tensorrt` engine. Run it ON the target device (e.g. the Jetson).
 
-    python scripts/export_tensorrt.py ../weights/yolo26n.pt --half
-    python scripts/export_tensorrt.py ../weights/yolo26n.pt --int8 --data ../dataset/ppe-custom.yaml
+python scripts/export_tensorrt.py ../weights/yolo26n.pt --half
+python scripts/export_tensorrt.py ../weights/yolo26n.pt --int8 --data ../dataset/ppe-custom.yaml
 """
 
 from __future__ import annotations
@@ -27,8 +27,13 @@ def main() -> None:
 
     device = f"dla:{args.dla}" if args.dla is not None else args.device
     path = YOLO(args.weights).export(
-        format="engine", imgsz=args.imgsz, half=args.half, int8=args.int8, data=args.data,
-        workspace=args.workspace, device=device,
+        format="engine",
+        imgsz=args.imgsz,
+        half=args.half,
+        int8=args.int8,
+        data=args.data,
+        workspace=args.workspace,
+        device=device,
     )
     print(path)
 

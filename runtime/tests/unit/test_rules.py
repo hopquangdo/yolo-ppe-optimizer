@@ -1,5 +1,4 @@
 from conftest import det
-
 from ppe_runtime.ppe import PersonStatus, RuleEngine
 
 

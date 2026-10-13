@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.data import build_dataloader, build_yolo_dataset
 from ultralytics.engine.trainer import BaseTrainer
@@ -181,7 +181,9 @@ class DetectionTrainer(BaseTrainer):
             (DetectionModel): YOLO detection model.
         """
         if self.finetune:
-            assert maskbndict is not None, "maskbndict must be stored in weights so that it can be loaded for finetuning"
+            assert maskbndict is not None, (
+                "maskbndict must be stored in weights so that it can be loaded for finetuning"
+            )
             model = DetectionModelPruned(maskbndict, cfg, nc=self.data["nc"], verbose=verbose and RANK == -1)
             if weights:
                 model.load(weights)

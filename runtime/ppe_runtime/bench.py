@@ -48,8 +48,9 @@ def bench_pipeline(pipeline: Pipeline, frames: list[np.ndarray], n: int, warmup:
     return report
 
 
-def run_bench(cfg: RuntimeConfig, weights: list[str], source: str | None, n: int, warmup: int,
-              out: str | None = None) -> dict[str, Any]:
+def run_bench(
+    cfg: RuntimeConfig, weights: list[str], source: str | None, n: int, warmup: int, out: str | None = None
+) -> dict[str, Any]:
     frames = load_frames(source, min(n, 300), cfg.engine.imgsz)
     results = {}
     for w in weights:
@@ -60,9 +61,11 @@ def run_bench(cfg: RuntimeConfig, weights: list[str], source: str | None, n: int
         finally:
             pipeline.close()
         r = results[w]
-        print(f"{Path(w).name:<32} {r['backend']:<9} {r['fps']:>8} FPS | detect p50 {r['detect_ms']['p50']} "
-              f"p95 {r['detect_ms']['p95']} ms | track {r['track_ms']['mean']} ms | rules {r['rules_ms']['mean']} ms",
-              flush=True)
+        print(
+            f"{Path(w).name:<32} {r['backend']:<9} {r['fps']:>8} FPS | detect p50 {r['detect_ms']['p50']} "
+            f"p95 {r['detect_ms']['p95']} ms | track {r['track_ms']['mean']} ms | rules {r['rules_ms']['mean']} ms",
+            flush=True,
+        )
     report = {
         "host": platform.node(),
         "platform": platform.platform(),

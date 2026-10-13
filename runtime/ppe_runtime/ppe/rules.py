@@ -62,8 +62,9 @@ class RuleEngine:
 
     def _violation(self, status: PersonStatus, frames: int, frame_index: int) -> Violation:
         p = status.person
-        return Violation(p.track_id, status.missing, self.severity_of(status.missing), p.box, p.confidence, frames,
-                         frame_index)
+        return Violation(
+            p.track_id, status.missing, self.severity_of(status.missing), p.box, p.confidence, frames, frame_index
+        )
 
     def _forget(self) -> None:
         for track_id in [t for t, s in self._tracks.items() if self._frame - s.last_seen > self.forget_after]:

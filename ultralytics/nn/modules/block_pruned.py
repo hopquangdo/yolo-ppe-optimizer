@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.nn.modules.block import Attention
 from ultralytics.nn.modules.conv import Conv

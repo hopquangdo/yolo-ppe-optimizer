@@ -25,7 +25,7 @@ def main():
     opt = parser.parse_args()
 
     model = YOLO(opt.weights)
-    results = model.val(data=opt.data, batch=opt.batch, imgsz=opt.imgsz)
+    model.val(data=opt.data, batch=opt.batch, imgsz=opt.imgsz)
 
 
 if __name__ == "__main__":

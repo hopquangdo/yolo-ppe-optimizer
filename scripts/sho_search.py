@@ -1,4 +1,5 @@
 """SHO hyperparameter search for a YOLO detection model."""
+
 from __future__ import annotations
 
 import argparse
