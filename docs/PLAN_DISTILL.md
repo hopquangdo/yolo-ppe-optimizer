@@ -16,7 +16,7 @@ yolo26x/l → student **yolo26n đã pruned**, vì đây là case khó nhất (c
 split bất đối xứng do mask pruning) — nếu chạy đúng case này, distill giữa
 2 scale chuẩn (không pruned, channel split luôn đối xứng) sẽ đơn giản hơn,
 không cần thiết kế lại. Khác biệt duy nhất cần code xử lý: loại model
-(`DetectionModel` vs `DetectionModelPruned`) phải chọn theo tham số, không
+(`DetectionModel` vs `DetectionModelPruned`) phải chọn theo than số, không
 hardcode — xem mục 10.
 
 ## 1. Vị trí trong pipeline tổng — 2 study song song
@@ -40,7 +40,7 @@ train_sparsity.py → prune.py ─┤                         ├─→ QAT → 
   epoch vừa phá vỡ tính "sạch" của so sánh, vì model đã hội tụ trên GT rồi
   mới học thêm từ teacher).
 - **Study B** — `train_sparsity.py → prune.py → finetune.py → QAT → export`.
-  Đây **không chỉ là Baseline-0 để tham chiếu tạm** như bản trước của tài
+  Đây **không chỉ là Baseline-0 để than chiếu tạm** như bản trước của tài
   liệu này viết — mà là **một study hoàn chỉnh, tự nó cũng đi hết tới
   QAT/export**, vì mục tiêu cuối là so sánh 2 checkpoint triển khai được
   thật sự (sau QAT) khác nhau thế nào, không chỉ so mAP ở bước finetune
@@ -81,17 +81,17 @@ hoạt động, sẽ không biết sửa ở đâu.
   lượng channel, vị trí khớp 1-1.
 - **YOLO26 không có DFL.** Verify trực tiếp bằng code, không suy từ paper
   viết cho YOLOv6/v8/v11:
-  - Toàn bộ file `ultralytics/cfg/models/26/*.yaml` đều set `reg_max: 1`.
-  - `ultralytics/nn/modules/head_pruned.py:65`:
-    `self.dfl = DFL(self.reg_max) if self.reg_max > 1 else nn.Identity()`
-    — với `reg_max=1`, dòng này trở thành `nn.Identity()`, tức là box
-    regression là **1 giá trị số thực trực tiếp mỗi cạnh**, không phải
-    phân phối xác suất rời rạc trên các bin.
-  - Hệ quả: `KL(p_reg_teacher || p_reg_student)` (công thức self-distillation
-    của YOLOv6 cho box DFL) **không áp dụng được**. Softmax trên 1 phần tử
-    luôn = 1 → KL luôn = 0 → loss chết, không sinh gradient nào. Đây là lỗi
-    được bắt **trước khi viết code**, đặc biệt nguy hiểm vì nó không crash,
-    chỉ âm thầm vô nghĩa (sẽ thấy mAP không cải thiện mà không hiểu vì sao).
+    - Toàn bộ file `ultralytics/cfg/models/26/*.yaml` đều set `reg_max: 1`.
+    - `ultralytics/nn/modules/head_pruned.py:65`:
+      `self.dfl = DFL(self.reg_max) if self.reg_max > 1 else nn.Identity()`
+      — với `reg_max=1`, dòng này trở thành `nn.Identity()`, tức là box
+      regression là **1 giá trị số thực trực tiếp mỗi cạnh**, không phải
+      phân phối xác suất rời rạc trên các bin.
+    - Hệ quả: `KL(p_reg_teacher || p_reg_student)` (công thức self-distillation
+      của YOLOv6 cho box DFL) **không áp dụng được**. Softmax trên 1 phần tử
+      luôn = 1 → KL luôn = 0 → loss chết, không sinh gradient nào. Đây là lỗi
+      được bắt **trước khi viết code**, đặc biệt nguy hiểm vì nó không crash,
+      chỉ âm thầm vô nghĩa (sẽ thấy mAP không cải thiện mà không hiểu vì sao).
 
 ## 4. Công thức loss (mỗi công thức đều có nguồn, không đoán)
 
@@ -143,6 +143,7 @@ L_reg_KD = lambda1 * SmoothL1(y_hat_s, y_hat_t) + lambda2 * (1 - GIoU(y_hat_s, y
 
 **Chi tiết quan trọng khi code** — 2 số hạng dùng **2 dạng biểu diễn khác
 nhau** của box, không phải cùng 1 tensor:
+
 - `SmoothL1` trên `x["boxes"]` thô (`head_pruned.py:92`), **trước**
   `dist2bbox` — cùng đơn vị/scale giữa teacher và student vì cả hai dùng
   chung stride grid tại mỗi tầng P3/P4/P5.
@@ -160,8 +161,8 @@ cuối training (tin hard label/GT nhiều hơn). Chỉ áp dụng cho tổng
 `L_cls_KD + L_reg_KD` — **không** áp cho `L_CWD` (CWD là feature-level,
 độc lập với lịch epoch của response distill).
 
-Paper gốc ghi rõ: *"No performance improvement is attained without the
-weight decay strategy compared with the baseline"* — tức α cố định gần
+Paper gốc ghi rõ: _"No performance improvement is attained without the
+weight decay strategy compared with the baseline"_ — tức α cố định gần
 như vô dụng, đây không phải tinh chỉnh tuỳ chọn mà là phần bắt buộc.
 
 ### 4.5 Tổng loss
@@ -180,7 +181,7 @@ Structured Pruning and Channel-Wise Distillation". Cùng dạng 3 giai đoạn
 không phải YOLO26 — nên phần response distillation dựa trên DFL của paper
 đó (nếu có) không dùng lại được, nhưng phần CWD feature-distillation và
 hình dạng pipeline tổng thể thì dùng được. Con số benchmark thực tế:
-YOLOv8m 25.85M → 6.85M tham số (giảm 73.5%), AP50 chỉ giảm 2.7 điểm nhờ
+YOLOv8m 25.85M → 6.85M than số (giảm 73.5%), AP50 chỉ giảm 2.7 điểm nhờ
 CWD. Đây là mốc kỳ vọng: nếu AP50 của mình giảm nhiều hơn đáng kể ở cùng
 tỷ lệ nén, khả năng cao là lỗi implementation, không chỉ đơn giản là
 "distillation chưa đủ mạnh".
@@ -193,13 +194,13 @@ lệ prune, cùng seed sparsity-training) — nếu không, chênh lệch mAP c�
 
 ### 6.1 Giai đoạn recovery-training (trước QAT) — trả lời Q1/Q2/Q3
 
-| Run | Config | Trả lời câu hỏi |
-|---|---|---|
-| Study B | prune → finetune, không distill (dùng `finetune.py` hiện có) | mốc tham chiếu / bản thân cũng là 1 study đầy đủ (mục 1) |
-| Exp-1 | Study A với response-only KD (4.2 + 4.3 + 4.4) | Q1 (phần response) |
-| Exp-2 | Study A với feature-only CWD (4.1) | Q1 (phần feature) / Q2 |
-| Exp-3 | Study A đầy đủ (công thức 4.5) | Q1 đầy đủ / Q2 (so với Exp-1, Exp-2) |
-| Sweep | Exp-3 với λ_CWD và trọng số KD thay đổi (lưới nhỏ, vd 3x3) | Q3 |
+| Run     | Config                                                       | Trả lời câu hỏi                                          |
+| ------- | ------------------------------------------------------------ | -------------------------------------------------------- |
+| Study B | prune → finetune, không distill (dùng `finetune.py` hiện có) | mốc than chiếu / bản thân cũng là 1 study đầy đủ (mục 1) |
+| Exp-1   | Study A với response-only KD (4.2 + 4.3 + 4.4)               | Q1 (phần response)                                       |
+| Exp-2   | Study A với feature-only CWD (4.1)                           | Q1 (phần feature) / Q2                                   |
+| Exp-3   | Study A đầy đủ (công thức 4.5)                               | Q1 đầy đủ / Q2 (so với Exp-1, Exp-2)                     |
+| Sweep   | Exp-3 với λ_CWD và trọng số KD thay đổi (lưới nhỏ, vd 3x3)   | Q3                                                       |
 
 Cố định seed, số epoch, augmentation giống hệt nhau ở mọi dòng trên. Log
 task loss, CWD loss, cls-KD loss, reg-KD loss **riêng biệt** mỗi epoch
@@ -213,11 +214,11 @@ sang giai đoạn QAT.
 
 ### 6.2 Giai đoạn QAT + export — so sánh cuối cùng giữa Study A và Study B
 
-| So sánh | Study A (distill → QAT) | Study B (finetune → QAT) |
-|---|---|---|
-| Input vào QAT | checkpoint từ Exp tốt nhất ở 6.1 | checkpoint từ `finetune.py` |
-| Cấu hình QAT | **giống hệt nhau** — cùng script `qat.py`, cùng epoch, cùng calibration | |
-| Metric so sánh | mAP50-95 sau QAT, mức sụt mAP so với trước QAT (đo độ "chịu đựng" quantization), tốc độ hội tụ calibration | |
+| So sánh        | Study A (distill → QAT)                                                                                    | Study B (finetune → QAT)    |
+| -------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------- |
+| Input vào QAT  | checkpoint từ Exp tốt nhất ở 6.1                                                                           | checkpoint từ `finetune.py` |
+| Cấu hình QAT   | **giống hệt nhau** — cùng script `qat.py`, cùng epoch, cùng calibration                                    |                             |
+| Metric so sánh | mAP50-95 sau QAT, mức sụt mAP so với trước QAT (đo độ "chịu đựng" quantization), tốc độ hội tụ calibration |                             |
 
 Đây mới là bảng quyết định thật sự: nếu Study A thắng ở 6.1 nhưng thua ở
 6.2 (distill giúp trước QAT nhưng bị quantization ăn mất lợi thế), hoặc
@@ -245,28 +246,28 @@ kết luận cuối cùng phải dựa trên 6.2, không phải 6.1.
 ## 8. File cần tạo
 
 - `ultralytics/utils/distill_utils.py`
-  - `register_feature_hooks(model, layer_names)` — forward hook lưu
-    activation cho cả teacher và student.
-  - `cwd_loss(student_feat, teacher_feat, adapter, T=4.0)` (mục 4.1)
-  - `cls_kd_loss(student_scores, teacher_scores, T)` (mục 4.2)
-  - `reg_kd_loss(student_boxes_raw, teacher_boxes_raw, student_boxes_decoded, teacher_boxes_decoded, lambda1, lambda2)` (mục 4.3)
-  - `kd_alpha_schedule(epoch, max_epoch)` (mục 4.4)
+    - `register_feature_hooks(model, layer_names)` — forward hook lưu
+      activation cho cả teacher và student.
+    - `cwd_loss(student_feat, teacher_feat, adapter, T=4.0)` (mục 4.1)
+    - `cls_kd_loss(student_scores, teacher_scores, T)` (mục 4.2)
+    - `reg_kd_loss(student_boxes_raw, teacher_boxes_raw, student_boxes_decoded, teacher_boxes_decoded, lambda1, lambda2)` (mục 4.3)
+    - `kd_alpha_schedule(epoch, max_epoch)` (mục 4.4)
 - `ultralytics/nn/distill_adapters.py`
-  - `nn.ModuleDict` chứa adapter Conv1x1+BN, mỗi cặp (P3, P4, P5) một
-    adapter, shape đọc từ model teacher/student thật lúc build (không
-    hardcode).
+    - `nn.ModuleDict` chứa adapter Conv1x1+BN, mỗi cặp (P3, P4, P5) một
+      adapter, shape đọc từ model teacher/student thật lúc build (không
+      hardcode).
 - `ultralytics/models/yolo/detect/distill_trainer.py`
-  - Kế thừa `DetectionTrainer`. `get_model()` load student
-    (`DetectionModelPruned`, từ checkpoint của `prune.py`) và teacher
-    (frozen, `requires_grad=False` toàn bộ). Override bước tính loss để
-    forward cả 2 model, tính tổng loss theo mục 4.5, chỉ optimize
-    student + tham số adapter.
+    - Kế thừa `DetectionTrainer`. `get_model()` load student
+      (`DetectionModelPruned`, từ checkpoint của `prune.py`) và teacher
+      (frozen, `requires_grad=False` toàn bộ). Override bước tính loss để
+      forward cả 2 model, tính tổng loss theo mục 4.5, chỉ optimize
+      student + than số adapter.
 - `distill.py` (root, cùng style CLI với `finetune.py`/`prune.py`)
-  ```
-  python distill.py --teacher yolo26l.pt \
-      --student-checkpoint runs/prune_test/yolo26_pruned.pt \
-      --data coco128.yaml --lambda-cwd 50 --temperature 4.0 --epochs 50
-  ```
+    ```
+    python distill.py --teacher yolo26l.pt \
+        --student-checkpoint runs/prune_test/yolo26_pruned.pt \
+        --data coco128.yaml --lambda-cwd 50 --temperature 4.0 --epochs 50
+    ```
 
 ## 9. Việc còn mở trước/trong khi code
 
@@ -295,7 +296,7 @@ lỗi DFL đã bắt ở mục 3):
    `build_optimizer()` (`trainer.py:1082`) duyệt toàn bộ
    `self.model.named_modules()` và gom vào param group **không lọc theo
    `requires_grad`**. Nếu teacher bị gắn làm submodule của `self.model`
-   (vd `self.model.teacher = teacher_model`), toàn bộ tham số teacher vẫn
+   (vd `self.model.teacher = teacher_model`), toàn bộ than số teacher vẫn
    bị đưa vào optimizer state dù đã `requires_grad=False` — tốn bộ nhớ,
    rủi ro vô tình unfreeze sau này. Teacher phải là attribute riêng của
    trainer (`self.teacher_model`), tách biệt khỏi `self.model`. Ngược lại,
@@ -321,7 +322,7 @@ lỗi DFL đã bắt ở mục 3):
    nhầm field.
 
 **Tổng quát hoá cho cặp scale bất kỳ (không chỉ pruned-n)**: `distill_trainer.py`
-nên nhận loại model của student qua tham số (`DetectionModel` cho scale
+nên nhận loại model của student qua than số (`DetectionModel` cho scale
 chuẩn, `DetectionModelPruned` cho student đã pruned), không hardcode class
 — để cùng 1 trainer dùng được cho mọi cặp teacher/student trong họ YOLO26.
 Adapter Conv1x1+BN (đọc shape runtime, không hardcode channel) đã đủ tổng
@@ -329,7 +330,7 @@ quát cho cả 2 trường hợp, không cần sửa gì thêm.
 
 **Cơ chế tách trainer, không đụng `finetune.py`**: `engine/model.py:783`
 — `self.trainer = (trainer or self._smart_load("trainer"))(...)` — nhận
-tham số `trainer=` tuỳ chọn. `finetune.py` gọi `model.train(finetune=True, ...)`
+than số `trainer=` tuỳ chọn. `finetune.py` gọi `model.train(finetune=True, ...)`
 không truyền `trainer=` nên luôn dùng `DetectionTrainer` mặc định, không
 liên quan gì tới `DistillTrainer`. `distill.py` sẽ gọi
 `model.train(trainer=DistillTrainer, ...)` để chỉ định tường minh. Vì
@@ -338,6 +339,7 @@ liên quan gì tới `DistillTrainer`. `distill.py` sẽ gọi
 script nào khác đang dùng `DetectionTrainer` mặc định.
 
 **Không cần lo** (đã verify, tái dùng được nguyên vẹn):
+
 - `get_model()` trong `train.py` đã có sẵn nhánh `self.finetune` load
   `DetectionModelPruned` + `maskbndict` — `DistillTrainer.get_model()` nên
   gọi `super().get_model()` để lấy student, không viết lại logic này (tránh
@@ -391,12 +393,12 @@ data=coco128 (128 ảnh), 5 epoch, `imgsz=320`, `batch=8`, `lr0=1e-4`, cùng
 seed cho mọi run. Đây **chỉ là smoke test toy-scale** (không phải sweep Q3
 nghiêm túc — cần GPU, nhiều epoch/seed, pruned checkpoint thật).
 
-| Run | mAP50-95 |
-|---|---|
-| Pretrained gốc (chưa train thêm) | 0.387 |
-| Study B: finetune 5 epoch, không distill | 0.248 |
+| Run                                                     | mAP50-95  |
+| ------------------------------------------------------- | --------- |
+| Pretrained gốc (chưa train thêm)                        | 0.387     |
+| Study B: finetune 5 epoch, không distill                | 0.248     |
 | Study A: distill, λ_CWD=50 (mặc định ban đầu ở mục 4.1) | **0.003** |
-| Study A: distill, λ_CWD=2 | **0.251** |
+| Study A: distill, λ_CWD=2                               | **0.251** |
 
 Với λ_CWD=50, `cls_loss` tăng gần gấp đôi so với Study B (~4.2 vs ~2.3) —
 đúng hiện tượng đã cảnh báo ở mục 6 ("distillation lấn át và bỏ đói task
@@ -414,20 +416,20 @@ lấy nguyên từ paper CWD gốc — domain/kiến trúc khác YOLO26): dùng
 Chạy tiếp sweep 5 giá trị λ_CWD trên cùng toy setup (CPU, 5 epoch, coco128,
 cùng seed, teacher=`yolo26s.pt`):
 
-| λ_CWD | mAP50-95 |
-|---|---|
-| **0.5** | **0.2513** ← duy nhất vượt Study B |
-| 1.0 | 0.2264 |
-| 2.0 | 0.2082 |
-| 5.0 | 0.1881 |
-| 10.0 | 0.0756 |
-| Study B (không distill, mốc so sánh) | 0.248 |
+| λ_CWD                                | mAP50-95                           |
+| ------------------------------------ | ---------------------------------- |
+| **0.5**                              | **0.2513** ← duy nhất vượt Study B |
+| 1.0                                  | 0.2264                             |
+| 2.0                                  | 0.2082                             |
+| 5.0                                  | 0.1881                             |
+| 10.0                                 | 0.0756                             |
+| Study B (không distill, mốc so sánh) | 0.248                              |
 
 Xu hướng **giảm đơn điệu, không có điểm uốn** — λ_CWD càng lớn càng tệ ngay
 từ 0.5, không phải dạng đường cong tăng-rồi-giảm điển hình của một sweep đã
 bao phủ đúng khoảng tối ưu. Điều này cho thấy **khoảng giá trị tốt thật sự
-còn thấp hơn 0.5** — 0.5 mới chỉ là giá trị tốt nhất *trong các giá trị đã
-thử*, chưa chắc là đáy thật của đường cong.
+còn thấp hơn 0.5** — 0.5 mới chỉ là giá trị tốt nhất _trong các giá trị đã
+thử_, chưa chắc là đáy thật của đường cong.
 
 **Việc cần làm tiếp** (chưa làm, ghi lại để không quên): thu hẹp sweep về
 λ_CWD ∈ [0, 0.5] (vd thử thêm {0.05, 0.1, 0.2, 0.5}) để tìm đáy thật, trước
@@ -442,12 +444,12 @@ Lo ngại ở mục 11.3/11.4 (kết luận từ 1 seed không đáng tin) đư�
 bằng cách chạy lại Study B và Study A (λ_CWD=0.5) trên 3 seed (0, 1, 2),
 cùng toy setup:
 
-| Seed | Study B (finetune) | Study A (distill, teacher=yolo26s, λ=0.5) | Chênh (A−B) |
-|---|---|---|---|
-| 0 | 0.2481 | 0.2125 | −0.0356 |
-| 1 | 0.2410 | 0.2462 | +0.0052 |
-| 2 | 0.2107 | 0.2088 | −0.0019 |
-| **Trung bình** | **0.2333** | **0.2225** | **−0.0108** |
+| Seed           | Study B (finetune) | Study A (distill, teacher=yolo26s, λ=0.5) | Chênh (A−B) |
+| -------------- | ------------------ | ----------------------------------------- | ----------- |
+| 0              | 0.2481             | 0.2125                                    | −0.0356     |
+| 1              | 0.2410             | 0.2462                                    | +0.0052     |
+| 2              | 0.2107             | 0.2088                                    | −0.0019     |
+| **Trung bình** | **0.2333**         | **0.2225**                                | **−0.0108** |
 
 **Kết luận đảo ngược so với mục 11.3**: qua 3 seed, distill trung bình **TỆ
 HƠN** finetune (−0.0108), không phải tốt hơn. Chênh lệch dao động rất mạnh
@@ -474,4 +476,3 @@ cần (a) cố định môi trường CPU cho reproducible thật (đặt
 chuyển hẳn sang GPU, và (b) test trên đúng case mục tiêu — **student đã
 pruned**, không phải yolo26n nguyên vẹn như toàn bộ mục 11 đã test — trước
 khi đầu tư thêm công sức dò hyperparameter trên case chưa đại diện này.
-

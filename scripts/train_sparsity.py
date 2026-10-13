@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 ROOT = Path(__file__).resolve().parents[1]  # repo root (this file lives in scripts/)
 if str(ROOT) not in sys.path:

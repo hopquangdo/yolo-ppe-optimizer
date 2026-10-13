@@ -23,7 +23,9 @@ from ultralytics import YOLO
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--weights", type=str, default="weights/yolo26_pruned.pt", help="pruned checkpoint from prune.py")
+    parser.add_argument(
+        "--weights", type=str, default="weights/yolo26_pruned.pt", help="pruned checkpoint from prune.py"
+    )
     parser.add_argument("--data", type=str, default="coco128.yaml")
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--batch", type=int, default=16)

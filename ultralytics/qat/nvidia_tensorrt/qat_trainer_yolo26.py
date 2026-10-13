@@ -1,6 +1,6 @@
 """QAT (Quantization-Aware Training) trainer cho pruned YOLO26 — NVIDIA TensorRT INT8.
 
-Xem ``PLAN_QAT.md`` để biết thiết kế đầy đủ. Port từ repo tham chiếu
+Xem ``PLAN_QAT.md`` để biết thiết kế đầy đủ. Port từ repo than chiếu
 (``Pruned-QAT-for-YOLOv8-.../qat_pruned_trainer.py``, viết cho YOLOv8) nhưng
 **không** reimplement lại toàn bộ ``_setup_train`` như bản gốc — bản gốc copy gần
 như nguyên văn nội bộ ``BaseTrainer`` của ultralytics 8.3.231 (build dataloader,
@@ -21,12 +21,11 @@ khớp target Jetson Orin Nano + TensorRT (PLAN_QAT.md mục 1.5).
 
 from __future__ import annotations
 
+import torch
 from pytorch_quantization import calib, quant_modules
 from pytorch_quantization import nn as quant_nn
+from torch import nn
 from tqdm import tqdm
-
-import torch
-import torch.nn as nn
 
 from ultralytics.models.yolo.detect.train import DetectionTrainer
 from ultralytics.utils import DEFAULT_CFG, LOGGER, RANK, colorstr
@@ -36,15 +35,15 @@ from ultralytics.utils.torch_utils import unwrap_model as de_parallel
 from .quant_ops_pruned_yolo26 import quant_module_change_pruned_yolo26
 
 # =============================================================================
-# Calibration utilities (model-agnostic — giữ nguyên từ repo tham chiếu)
+# Calibration utilities (model-agnostic — giữ nguyên từ repo than chiếu)
 # =============================================================================
 
 
 def _set_quantizer_state(model, enable_quant: bool, enable_calib: bool):
     """Đặt trạng thái đồng nhất cho tất cả TensorQuantizer trong model.
 
-    quantizer có calibrator -> dùng calib mode hoặc quant mode; quantizer không
-    calibrator (vd weight quantizer đã có ``_amax`` từ khởi tạo) -> luôn enable_quant.
+    quantizer có calibrator -> dùng calib mode hoặc quant mode; quantizer không calibrator (vd weight quantizer đã có
+    ``_amax`` từ khởi tạo) -> luôn enable_quant.
     """
     for name, module in model.named_modules():
         if not isinstance(module, quant_nn.TensorQuantizer):
@@ -60,7 +59,9 @@ def _set_quantizer_state(model, enable_quant: bool, enable_calib: bool):
                 module.enable_quant()
                 module.disable_calib()
             elif module._amax is None:
-                LOGGER.warning(f"[QAT-Yolo26] TensorQuantizer '{name}' không có _amax và không có calibrator — disable.")
+                LOGGER.warning(
+                    f"[QAT-Yolo26] TensorQuantizer '{name}' không có _amax và không có calibrator — disable."
+                )
                 module.disable()
             else:
                 module.enable_quant()
@@ -113,7 +114,7 @@ def cal_model(model, data_loader, device, num_batch=256):
 
 
 # =============================================================================
-# BN freeze hook (model-agnostic — giữ nguyên từ repo tham chiếu)
+# BN freeze hook (model-agnostic — giữ nguyên từ repo than chiếu)
 # =============================================================================
 
 
@@ -125,9 +126,8 @@ def _bn_eval_hook(module, input):
 def _register_bn_freeze_hook(model):
     """Đăng ký forward pre-hook giữ BatchNorm ở eval mode trong lúc QAT training.
 
-    Dùng hook (không phải monkey-patch ``model.train()``) vì hook chỉ ảnh hưởng
-    forward, sống sót qua ``deepcopy`` (EMA) mà không mang theo state sai — đúng
-    bài học đã rút ra ở ``DistillMixin.__deepcopy__`` (distill_trainer.py) và hàm
+    Dùng hook (không phải monkey-patch ``model.train()``) vì hook chỉ ảnh hưởng forward, sống sót qua ``deepcopy`` (EMA)
+    mà không mang theo state sai — đúng bài học đã rút ra ở ``DistillMixin.__deepcopy__`` (distill_trainer.py) và hàm
     này là top-level (không phải closure) để pickle được khi lưu checkpoint.
     """
     bn_layers = [m for m in model.modules() if isinstance(m, (nn.BatchNorm2d, nn.SyncBatchNorm))]
@@ -144,11 +144,10 @@ def _register_bn_freeze_hook(model):
 def _skip_detect_quantizers_yolo26(model):
     """Disable quantizer trong DetectPruned (cả one2many lẫn one2one) — giữ FP32.
 
-    Khác repo tham chiếu (chỉ có 1 nhánh Detect): DetectPruned có 2 nhánh
-    (``cv2``/``cv3`` one2many dùng lúc train, ``one2one_cv2``/``one2one_cv3`` dùng
-    lúc suy luận thật — head_pruned.py:96-108) — phải disable cả hai vì checkpoint
-    export cuối cùng cần cả hai FP32 nhất quán (one2many vẫn tồn tại trong graph dù
-    không dùng lúc export, xem ``DetectPruned.forward``).
+    Khác repo than chiếu (chỉ có 1 nhánh Detect): DetectPruned có 2 nhánh (``cv2``/``cv3`` one2many dùng lúc train,
+    ``one2one_cv2``/``one2one_cv3`` dùng lúc suy luận thật — head_pruned.py:96-108) — phải disable cả hai vì checkpoint
+    export cuối cùng cần cả hai FP32 nhất quán (one2many vẫn tồn tại trong graph dù không dùng lúc export, xem
+    ``DetectPruned.forward``).
     """
     model_inner = de_parallel(model) if is_parallel(model) else model
     detect_idx = str(len(model_inner.model) - 1)
@@ -168,14 +167,15 @@ def _skip_detect_quantizers_yolo26(model):
 def _skip_attention_quantizers_yolo26(model):
     """Disable quantizer trong C2PSAPruned/C3k2AttnPruned (Attention nội bộ) — giữ FP32.
 
-    YOLO26 có attention block mà YOLOv8 (repo tham chiếu) không có. Attention có
-    softmax/sigmoid nội bộ, nhạy với quantization nhiễu — giữ FP32 ở lần triển khai
-    đầu tiên, giống quyết định đã áp dụng cho distillation (không distill riêng
-    attention, xem PLAN_DISTILL.md).
+    YOLO26 có attention block mà YOLOv8 (repo than chiếu) không có. Attention có softmax/sigmoid nội bộ, nhạy với
+    quantization nhiễu — giữ FP32 ở lần triển khai đầu tiên, giống quyết định đã áp dụng cho distillation (không distill
+    riêng attention, xem PLAN_DISTILL.md).
     """
     model_inner = de_parallel(model) if is_parallel(model) else model
     attn_prefixes = tuple(
-        f"{name}." for name, module in model_inner.named_modules() if module.__class__.__name__ in ("C2PSAPruned", "C3k2AttnPruned")
+        f"{name}."
+        for name, module in model_inner.named_modules()
+        if module.__class__.__name__ in ("C2PSAPruned", "C3k2AttnPruned")
     )
     if not attn_prefixes:
         return 0
@@ -187,7 +187,9 @@ def _skip_attention_quantizers_yolo26(model):
         if name.startswith(attn_prefixes):
             module.disable()
             disabled += 1
-    LOGGER.info(f"[QAT-Yolo26] Disabled {disabled} quantizer trong attention block ({len(attn_prefixes)} khối) -> FP32.")
+    LOGGER.info(
+        f"[QAT-Yolo26] Disabled {disabled} quantizer trong attention block ({len(attn_prefixes)} khối) -> FP32."
+    )
     return disabled
 
 
@@ -199,19 +201,18 @@ def _skip_attention_quantizers_yolo26(model):
 class QATTrainerYolo26(DetectionTrainer):
     """QAT trainer cho pruned YOLO26, output TensorRT INT8 (Jetson Orin Nano).
 
-    Kỹ thuật áp dụng (PLAN_QAT.md mục 1.2 — model-agnostic, giữ nguyên từ repo
-    tham chiếu) + phần viết riêng cho YOLO26 (mục 1.3):
-      1. Calibration entropy (KL divergence) trên train data.
-      2. BN freeze hook (eval mode) trong lúc QAT training.
-      3. DetectPruned (cả one2many/one2one) + attention block giữ FP32.
-      4. LR scaling: lr0 /= 100 (fine-tuning nhẹ, chỉ để quantizer thích nghi).
-      5. ``recalib_every``: định kỳ tính lại calibration trong lúc train.
+    Kỹ thuật áp dụng (PLAN_QAT.md mục 1.2 — model-agnostic, giữ nguyên từ repo than chiếu) + phần viết riêng cho YOLO26
+    (mục 1.3):
+    1. Calibration entropy (KL divergence) trên train data.
+    2. BN freeze hook (eval mode) trong lúc QAT training.
+    3. DetectPruned (cả one2many/one2one) + attention block giữ FP32.
+    4. LR scaling: lr0 /= 100 (fine-tuning nhẹ, chỉ để quantizer thích nghi).
+    5. ``recalib_every``: định kỳ tính lại calibration trong lúc train.
 
-    Kwarg thêm cho ``model.train(...)`` (pop trước ``super().__init__()``, đúng
-    pattern ``DistillTrainer`` đã dùng — tránh ``get_cfg()`` báo lỗi key lạ):
-      calib_batches (int): số batch dùng để calibrate, mặc định 256.
-      recalib_every (int): số epoch giữa 2 lần recalibrate, 0 = tắt. Mặc định 0
-        (khác repo tham chiếu mặc định=1 — recalibrate mỗi epoch tốn thời gian
+    Kwarg thêm cho ``model.train(...)`` (pop trước ``super().__init__()``, đúng pattern ``DistillTrainer`` đã dùng —
+    tránh ``get_cfg()`` báo lỗi key lạ): calib_batches (int): số batch dùng để calibrate, mặc định 256. recalib_every
+    (int): số epoch giữa 2 lần recalibrate, 0 = tắt. Mặc định 0
+        (khác repo than chiếu mặc định=1 — recalibrate mỗi epoch tốn thời gian
         đáng kể trên Jetson/edge-dev-loop; bật thủ công khi cần).
     """
 
@@ -234,7 +235,7 @@ class QATTrainerYolo26(DetectionTrainer):
            từng layer thủ công).
         2. ``super().get_model(...)`` — tái dùng logic có sẵn của
            ``DetectionTrainer`` (load maskbndict + pruned weights, re-init bias
-           detect head) thay vì viết lại (khác repo tham chiếu, xem docstring module).
+           detect head) thay vì viết lại (khác repo than chiếu, xem docstring module).
         3. ``quant_module_change_pruned_yolo26()`` — thêm quantizer cho các khối
            split-based (C3k2*/BottleneckPruned/Concat/Upsample).
         4. Calibrate trên train data (entropy method) — dùng ``self.get_dataloader``
@@ -245,7 +246,7 @@ class QATTrainerYolo26(DetectionTrainer):
            tính trainer) tại thời điểm này vẫn là str/Path (``BaseTrainer.__init__``
            chỉ set path, ``engine/model.py`` mới gán model thật SAU KHI hàm này trả
            về) — nên phải gán tạm ``self.model = model`` trước khi gọi
-           ``get_dataloader`` (giống trick repo tham chiếu dùng, chỉ khác: ở đây
+           ``get_dataloader`` (giống trick repo than chiếu dùng, chỉ khác: ở đây
            không cần khôi phục lại giá trị cũ vì giá trị cũ (str) không còn được
            dùng nữa sau bước này).
         5. Skip quantizer cho Detect head + attention -> giữ FP32.
@@ -260,7 +261,10 @@ class QATTrainerYolo26(DetectionTrainer):
             calib_bs = max(self.args.batch, 1) * 2 if isinstance(self.args.batch, int) and self.args.batch > 0 else 16
             calib_loader = self.get_dataloader(self.data["train"], batch_size=calib_bs, rank=-1, mode="val")
             LOGGER.info(
-                colorstr("yellow", f"[QAT-Yolo26] Calibrating trên train set ({calib_bs} batch, {self.calib_batches} batches) — entropy method")
+                colorstr(
+                    "yellow",
+                    f"[QAT-Yolo26] Calibrating trên train set ({calib_bs} batch, {self.calib_batches} batches) — entropy method",
+                )
             )
             cal_model(model, calib_loader, self.device, num_batch=self.calib_batches)
 
@@ -271,7 +275,7 @@ class QATTrainerYolo26(DetectionTrainer):
     def _setup_train(self, world_size=None):
         """Gọi nguyên ``BaseTrainer._setup_train`` rồi chèn thêm phần QAT-specific.
 
-        Khác repo tham chiếu (reimplement toàn bộ dataloader/optimizer/EMA/freeze
+        Khác repo than chiếu (reimplement toàn bộ dataloader/optimizer/EMA/freeze
         thủ công): ở đây chỉ scale ``lr0`` trước khi ``super()`` build optimizer
         (optimizer đọc ``self.args.lr0`` trong lúc chạy), rồi đăng ký BN freeze
         hook + tắt AMP sau khi model/dataloader đã sẵn sàng — giảm rủi ro vỡ khi
@@ -286,9 +290,11 @@ class QATTrainerYolo26(DetectionTrainer):
         model_inner = de_parallel(self.model) if is_parallel(self.model) else self.model
         self._bn_hook_handles = _register_bn_freeze_hook(model_inner)
 
-        # Fake-quantization không tương thích AMP (giống repo tham chiếu).
+        # Fake-quantization không tương thích AMP (giống repo than chiếu).
         self.amp = False
-        self.scaler = torch.amp.GradScaler("cuda", enabled=False) if TORCH_2_4 else torch.cuda.amp.GradScaler(enabled=False)
+        self.scaler = (
+            torch.amp.GradScaler("cuda", enabled=False) if TORCH_2_4 else torch.cuda.amp.GradScaler(enabled=False)
+        )
 
     def _recalibrate(self):
         """Re-calibrate quantization scale giữa lúc train (dùng test_loader)."""
@@ -316,6 +322,10 @@ class QATTrainerYolo26(DetectionTrainer):
 
     def validate(self):
         """Recalibrate trước validation nếu tới hạn ``recalib_every``."""
-        if self.recalib_every > 0 and RANK in (-1, 0) and (self.epoch == 0 or (self.epoch + 1) % self.recalib_every == 0):
+        if (
+            self.recalib_every > 0
+            and RANK in (-1, 0)
+            and (self.epoch == 0 or (self.epoch + 1) % self.recalib_every == 0)
+        ):
             self._recalibrate()
         return super().validate()

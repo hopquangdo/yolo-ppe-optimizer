@@ -1,6 +1,6 @@
 """Export YOLO weights to ONNX for the native `onnx` engine.
 
-    python scripts/export_onnx.py ../weights/yolo26n.pt --imgsz 640 [--half] [--dynamic]
+python scripts/export_onnx.py ../weights/yolo26n.pt --imgsz 640 [--half] [--dynamic]
 """
 
 from __future__ import annotations
@@ -21,8 +21,13 @@ def main() -> None:
     from ultralytics import YOLO
 
     path = YOLO(args.weights).export(
-        format="onnx", imgsz=args.imgsz, half=args.half, dynamic=args.dynamic, opset=args.opset,
-        simplify=not args.no_simplify, device=0 if args.half else "cpu",
+        format="onnx",
+        imgsz=args.imgsz,
+        half=args.half,
+        dynamic=args.dynamic,
+        opset=args.opset,
+        simplify=not args.no_simplify,
+        device=0 if args.half else "cpu",
     )
     print(path)
 

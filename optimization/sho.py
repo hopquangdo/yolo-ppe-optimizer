@@ -4,6 +4,7 @@ The optimizer is deliberately independent of Ultralytics so that its update
 rules can be tested with inexpensive mathematical objectives before running
 YOLO training.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,11 +27,9 @@ def levy(dim: int | tuple[int, ...], beta: float = 1.5, rng: np.random.Generator
     if not shape or any(size < 1 for size in shape) or not 0 < beta <= 2:
         raise ValueError("dim must be positive and beta must be in (0, 2]")
     generator = rng or np.random.default_rng()
-    sigma = (
-        gamma(1 + beta)
-        * np.sin(np.pi * beta / 2)
-        / (gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))
-    ) ** (1 / beta)
+    sigma = (gamma(1 + beta) * np.sin(np.pi * beta / 2) / (gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (
+        1 / beta
+    )
     numerator = generator.normal(0, sigma, shape)
     denominator = np.maximum(np.abs(generator.normal(0, 1, shape)), np.finfo(float).eps) ** (1 / beta)
     return numerator / denominator
@@ -94,9 +93,10 @@ def sho(
         for index in range(pop):
             for coordinate in range(dim):
                 if r2[index] >= 0.1:
-                    hunted[index, coordinate] = alpha * (elite[index, coordinate] - rng.random() * moved[index, coordinate]) + (
-                        1 - alpha
-                    ) * elite[index, coordinate]
+                    hunted[index, coordinate] = (
+                        alpha * (elite[index, coordinate] - rng.random() * moved[index, coordinate])
+                        + (1 - alpha) * elite[index, coordinate]
+                    )
                 else:
                     hunted[index, coordinate] = (1 - alpha) * (
                         moved[index, coordinate] - rng.random() * elite[index, coordinate]

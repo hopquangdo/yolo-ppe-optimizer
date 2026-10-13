@@ -4,6 +4,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from typing_extensions import Self
 
 
 class VideoSource:
@@ -40,7 +41,7 @@ class VideoSource:
     def close(self) -> None:
         self._cap.release()
 
-    def __enter__(self) -> VideoSource:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc) -> None:
@@ -48,7 +49,7 @@ class VideoSource:
 
 
 class VideoWriter:
-    """mp4 writer that opens lazily on the first frame (size taken from it)."""
+    """Mp4 writer that opens lazily on the first frame (size taken from it)."""
 
     def __init__(self, path: str | Path, fps: float = 25.0, fourcc: str = "mp4v") -> None:
         self.path = str(path)
@@ -68,7 +69,7 @@ class VideoWriter:
             self._writer.release()
             self._writer = None
 
-    def __enter__(self) -> VideoWriter:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc) -> None:

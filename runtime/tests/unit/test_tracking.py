@@ -1,6 +1,5 @@
 import pytest
 from conftest import det
-
 from ppe_runtime.tracking import create_tracker
 from ppe_runtime.utils.config import TrackingConfig
 
@@ -8,17 +7,31 @@ from ppe_runtime.utils.config import TrackingConfig
 def walk(tracker, frames=10, image=None):
     out = []
     for f in range(frames):
-        dets = [det("person", (10 + 3 * f, 10, 90 + 3 * f, 200)), det("person", (300 - 3 * f, 20, 380 - 3 * f, 210)),
-                det("helmet", (30 + 3 * f, 10, 60 + 3 * f, 30))]
+        dets = [
+            det("person", (10 + 3 * f, 10, 90 + 3 * f, 200)),
+            det("person", (300 - 3 * f, 20, 380 - 3 * f, 210)),
+            det("helmet", (30 + 3 * f, 10, 60 + 3 * f, 30)),
+        ]
         out.append(tracker.update(dets, image))
     return out
 
 
 @pytest.mark.parametrize("kind", ["bytetrack", "botsort"])
 def test_ids_are_stable_and_only_people_tracked(kind, image):
-    cfg = TrackingConfig(tracker_type=kind, **({"gmc_method": "none", "proximity_thresh": 0.5,
-                                                 "appearance_thresh": 0.8, "with_reid": False, "model": "auto"}
-                                                if kind == "botsort" else {}))
+    cfg = TrackingConfig(
+        tracker_type=kind,
+        **(
+            {
+                "gmc_method": "none",
+                "proximity_thresh": 0.5,
+                "appearance_thresh": 0.8,
+                "with_reid": False,
+                "model": "auto",
+            }
+            if kind == "botsort"
+            else {}
+        ),
+    )
     tracker = create_tracker(cfg, {"person"})
     frames = walk(tracker, image=image)
     last = frames[-1]
@@ -46,7 +59,13 @@ def test_disabled():
 
 
 def test_botsort_auto_reid_rejected():
-    cfg = TrackingConfig(tracker_type="botsort", with_reid=True, model="auto", gmc_method="none",
-                         proximity_thresh=0.5, appearance_thresh=0.8)
+    cfg = TrackingConfig(
+        tracker_type="botsort",
+        with_reid=True,
+        model="auto",
+        gmc_method="none",
+        proximity_thresh=0.5,
+        appearance_thresh=0.8,
+    )
     with pytest.raises(ValueError, match="ReID"):
         create_tracker(cfg)

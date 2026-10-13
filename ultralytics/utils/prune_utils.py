@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import re
 
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.nn.modules import Conv, DWConv
 from ultralytics.nn.modules.block import (
-    Bottleneck,
     C2PSA,
-    PSABlock,
     SPPF,
+    Bottleneck,
+    PSABlock,
 )
 
 
@@ -58,7 +58,5 @@ def build_ignore_bn_set(model: nn.Module) -> set[str]:
 def is_prunable_block_output(name: str, module: nn.Module) -> bool:
     """Whether module is a block output whose final BN can be pruned."""
     return isinstance(module, Conv) and not (
-        isinstance(module.conv, nn.Conv2d)
-        and module.conv.groups > 1
-        and module.conv.groups == module.conv.in_channels
+        isinstance(module.conv, nn.Conv2d) and module.conv.groups > 1 and module.conv.groups == module.conv.in_channels
     )

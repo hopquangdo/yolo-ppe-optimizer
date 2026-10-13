@@ -37,11 +37,18 @@ def parse_opt():
     parser.add_argument("--batch", type=int, default=16)
     parser.add_argument("--lambda-cwd", type=float, default=50.0, help="CWD feature-loss weight (PLAN.md 4.1)")
     parser.add_argument("--temperature", type=float, default=4.0, help="softmax temperature for CWD/cls KD")
-    parser.add_argument("--kd-method", type=str, default="cwd_kd", choices=["cwd_kd", "builtin", "ckd_b"],
-                        help="cwd_kd (mặc định) | builtin (Ultralytics 8.4.152) | ckd_b (bản B)")
+    parser.add_argument(
+        "--kd-method",
+        type=str,
+        default="cwd_kd",
+        choices=["cwd_kd", "builtin", "ckd_b"],
+        help="cwd_kd (mặc định) | builtin (Ultralytics 8.4.152) | ckd_b (bản B)",
+    )
     parser.add_argument("--dis", type=float, default=None, help="hệ số KD cho builtin/ckd_b (mặc định 6.0 / 0.14)")
-    parser.add_argument("--kd-params", type=str, default=None, help='JSON cho ckd_b, vd \'{"agree": false}\'')
-    parser.add_argument("--no-finetune", action="store_true", help="student không phải checkpoint pruned (vd yolo26n.pt)")
+    parser.add_argument("--kd-params", type=str, default=None, help="JSON cho ckd_b, vd '{\"agree\": false}'")
+    parser.add_argument(
+        "--no-finetune", action="store_true", help="student không phải checkpoint pruned (vd yolo26n.pt)"
+    )
     parser.add_argument("--optimizer", type=str, default="AdamW", help="'auto' để giống thí nghiệm bản B trên Kaggle")
     parser.add_argument("--lr0", type=float, default=1e-3)
     parser.add_argument("--momentum", type=float, default=0.9)

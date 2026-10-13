@@ -166,8 +166,12 @@ def load_config(path: str | Path | None = None, overrides: dict[str, Any] | None
         engine = overrides.pop("engine")
     engine = dict(_resolve(engine, "engine", config_dir))
     if raw.get("weights") is not None:
-        engine.setdefault("weights", str((config_dir / raw["weights"]).resolve()) if raw["weights"] != "synthetic"
-                          and not Path(raw["weights"]).is_absolute() else raw["weights"])
+        engine.setdefault(
+            "weights",
+            str((config_dir / raw["weights"]).resolve())
+            if raw["weights"] != "synthetic" and not Path(raw["weights"]).is_absolute()
+            else raw["weights"],
+        )
     if "weights" in overrides:
         # weights given on the command line / env: relative to the cwd, backend follows the suffix unless the
         # engine file was chosen explicitly too
@@ -177,7 +181,7 @@ def load_config(path: str | Path | None = None, overrides: dict[str, Any] | None
             engine["backend"] = "auto"
 
     tracking = overrides.pop("tracking", raw.get("tracking", "bytetrack"))
-    if isinstance(tracking, str) and tracking.lower() == "none" or tracking is None or tracking is False:
+    if (isinstance(tracking, str) and tracking.lower() == "none") or tracking is None or tracking is False:
         tracking = None
     else:
         tracking = _resolve(tracking, "tracking", config_dir)

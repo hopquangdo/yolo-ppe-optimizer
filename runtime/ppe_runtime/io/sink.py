@@ -39,13 +39,21 @@ class Sink(ABC):
         self.send({"type": "metrics", "ts": time.time(), **snapshot})
 
     def on_event(self, event_type: str, message: str, severity: str = "INFO", data: dict | None = None) -> None:
-        self.send({"type": "event", "ts": time.time(), "event_type": event_type, "message": message,
-                   "severity": severity, "data": data or {}})
+        self.send(
+            {
+                "type": "event",
+                "ts": time.time(),
+                "event_type": event_type,
+                "message": message,
+                "severity": severity,
+                "data": data or {},
+            }
+        )
 
     @abstractmethod
     def send(self, record: dict[str, Any]) -> None: ...
 
-    def close(self) -> None:  # noqa: B027 - optional hook
+    def close(self) -> None:
         pass
 
 
@@ -135,8 +143,9 @@ class WebhookSink(BackgroundSink):
 class AgentSink(BackgroundSink):
     """Reports to the local edge-ops Edge Agent: violations/lifecycle as events, metrics as `RuntimeTelemetry`."""
 
-    def __init__(self, agent_url: str, runtime_id: str, node_id: str, api_key: str | None = None,
-                 timeout: float = 5.0) -> None:
+    def __init__(
+        self, agent_url: str, runtime_id: str, node_id: str, api_key: str | None = None, timeout: float = 5.0
+    ) -> None:
         import requests
 
         self._session = requests.Session()
@@ -149,8 +158,9 @@ class AgentSink(BackgroundSink):
     def on_violation(self, violation: Violation) -> None:
         missing = ", ".join(sorted(violation.missing))
         who = f"track {violation.track_id}" if violation.track_id is not None else "person"
-        self.on_event(EVENT_VIOLATION, f"PPE violation: {who} missing {missing}", violation.severity,
-                      violation.to_dict())
+        self.on_event(
+            EVENT_VIOLATION, f"PPE violation: {who} missing {missing}", violation.severity, violation.to_dict()
+        )
 
     def on_metrics(self, snapshot: dict[str, Any]) -> None:
         body = {k: v for k, v in snapshot.items() if k in TELEMETRY_KEYS}
@@ -158,8 +168,9 @@ class AgentSink(BackgroundSink):
         self.send({"_path": "telemetry", **body})
 
     def on_event(self, event_type: str, message: str, severity: str = "INFO", data: dict | None = None) -> None:
-        self.send({"_path": "events", "event_type": event_type, "message": message, "severity": severity,
-                   "data": data or {}})
+        self.send(
+            {"_path": "events", "event_type": event_type, "message": message, "severity": severity, "data": data or {}}
+        )
 
     def deliver(self, record: dict[str, Any]) -> None:
         path = record.pop("_path")
@@ -167,8 +178,16 @@ class AgentSink(BackgroundSink):
 
 
 class MqttSink(BackgroundSink):
-    def __init__(self, host: str, port: int = 1883, topic_prefix: str = "ppe", username: str | None = None,
-                 password: str | None = None, qos: int = 1, client_id: str = "") -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int = 1883,
+        topic_prefix: str = "ppe",
+        username: str | None = None,
+        password: str | None = None,
+        qos: int = 1,
+        client_id: str = "",
+    ) -> None:
         import paho.mqtt.client as mqtt
 
         try:

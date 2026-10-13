@@ -3,7 +3,6 @@ import json
 import cv2
 import numpy as np
 import pytest
-
 from ppe_runtime.cli import agent_overrides, main
 from ppe_runtime.io.sink import FileSink
 from ppe_runtime.io.video import VideoSource
@@ -80,7 +79,10 @@ def test_cli_bench(tmp_path, capsys):
 
 def test_agent_env_contract():
     env = {
-        "RUNTIME_ID": "rt-1", "NODE_ID": "node-1", "AGENT_URL": "http://agent:8081", "MODEL_PATH": "/models/m.onnx",
+        "RUNTIME_ID": "rt-1",
+        "NODE_ID": "node-1",
+        "AGENT_URL": "http://agent:8081",
+        "MODEL_PATH": "/models/m.onnx",
         "RUNTIME_CONFIG": json.dumps({"source": "rtsp://cam/1", "target_fps": 10, "conf": 0.4, "tracking": "botsort"}),
     }
     overrides, level = agent_overrides(env)

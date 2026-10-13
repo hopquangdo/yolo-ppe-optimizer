@@ -6,7 +6,7 @@ import copy
 import math
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.nn.modules.block import DFL
 from ultralytics.nn.modules.conv import Conv, DWConv
@@ -70,11 +70,11 @@ class DetectPruned(nn.Module):
 
     @property
     def one2many(self):
-        return dict(box_head=self.cv2, cls_head=self.cv3)
+        return {"box_head": self.cv2, "cls_head": self.cv3}
 
     @property
     def one2one(self):
-        return dict(box_head=self.one2one_cv2, cls_head=self.one2one_cv3)
+        return {"box_head": self.one2one_cv2, "cls_head": self.one2one_cv3}
 
     @property
     def end2end(self):
@@ -91,7 +91,7 @@ class DetectPruned(nn.Module):
         bs = x[0].shape[0]
         boxes = torch.cat([box_head[i](x[i]).view(bs, 4 * self.reg_max, -1) for i in range(self.nl)], dim=-1)
         scores = torch.cat([cls_head[i](x[i]).view(bs, self.nc, -1) for i in range(self.nl)], dim=-1)
-        return dict(boxes=boxes, scores=scores, feats=x)
+        return {"boxes": boxes, "scores": scores, "feats": x}
 
     def forward(self, x):
         preds = self.forward_head(x, **self.one2many)

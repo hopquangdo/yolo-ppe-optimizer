@@ -10,18 +10,18 @@ New files:
   ultralytics/nn/tasks_pruned.py
   ultralytics/cfg/models/26/yolo26-pruned.yaml
 """
+
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import sys
 import warnings
 from pathlib import Path
 
 import torch
-import torch.nn as nn
 import yaml
+from torch import nn
 
 warnings.filterwarnings("ignore")
 
@@ -31,19 +31,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))  # must run before the ultralytics imports below
 
 from ultralytics.nn.autobackend import AutoBackend
-from ultralytics.nn.modules import Concat, Conv
-from ultralytics.nn.modules.block import Bottleneck, C2PSA, C3k2
-from ultralytics.nn.modules.block_pruned import (
-    C2PSAPruned,
-    C3k2AttnPruned,
-    C3k2C3kPruned,
-    C3k2Pruned,
-    SPPFPruned,
-)
-from ultralytics.nn.modules.head_pruned import DetectPruned
-from ultralytics.utils.prune_utils import build_ignore_bn_set
+from ultralytics.nn.modules.block import C2PSA, Bottleneck, C3k2
 from ultralytics.nn.tasks_pruned import DetectionModelPruned
 from ultralytics.utils import colorstr
+from ultralytics.utils.prune_utils import build_ignore_bn_set
 
 
 def parse_opt():
@@ -283,10 +274,9 @@ def main(opt):
         pruned_model(dummy)
     n0 = sum(p.numel() for p in model.model.parameters())
     n1 = sum(p.numel() for p in pruned_model.parameters())
-    print(f"Params: {n0/1e6:.3f}M -> {n1/1e6:.3f}M ({(1-n1/n0)*100:.1f}% reduction)")
+    print(f"Params: {n0 / 1e6:.3f}M -> {n1 / 1e6:.3f}M ({(1 - n1 / n0) * 100:.1f}% reduction)")
     kept_ratio = sum(v.sum().item() for v in maskbndict.values()) / sum(v.numel() for v in maskbndict.values())
     print(f"BN mask kept: {kept_ratio * 100:.1f}% (use --prune-ratio 0.3 for ~30% channel prune)")
-
 
 
 if __name__ == "__main__":

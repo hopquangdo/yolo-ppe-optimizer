@@ -107,10 +107,9 @@ def builtin_loss(model, teacher_preds) -> torch.Tensor:
 def ckd_b_loss(model, teacher_preds, P: dict) -> torch.Tensor:
     """Bản B: PKD trên 3 tầng neck + cross-head qua head teacher (cả o2m và o2o), có trọng số B2.
 
-    L = w_feat · Σ_P PKD(Proj(F_s), F_t)
-      + Σ_{br ∈ o2m, o2o} [ Σ w·QFL(ŝ, σ(s_t)) / (Σw·C) + w_reg · Σ w·|b̂ − b_t| / (Σw·4) ]
-    với (ŝ, b̂) = head_teacher_br(Proj(F_s)) và B2: w = (p_m + p_o)/2 · (1 − |p_m − p_o|),
-    p = max_c σ(score teacher) tại từng anchor (detach).
+    L = w_feat · Σ_P PKD(Proj(F_s), F_t) + Σ_{br ∈ o2m, o2o} [ Σ w·QFL(ŝ, σ(s_t)) / (Σw·C) + w_reg · Σ w·|b̂ − b_t| /
+    (Σw·4) ] với (ŝ, b̂) = head_teacher_br(Proj(F_s)) và B2: w = (p_m + p_o)/2 · (1 − |p_m − p_o|), p = max_c σ(score
+    teacher) tại từng anchor (detach).
 
     ``P`` (kd_params): w_feat=1, w_reg=4, w_o2o=1, beta=1 (QFL), agree=True (bật B2).
     """
@@ -161,7 +160,7 @@ def strip_distill(src: str, dst: str, pruned_ckpt: str | None = None) -> None:
     1. Bỏ mọi module chỉ dùng khi train (``distill_adapters``, ``distill_projectors``).
     2. Trả class về DetectionModelPruned / DetectionModel (bỏ lớp Distill*).
     3. Gán lại ``maskbndict`` từ checkpoint pruned — trainer KHÔNG lưu key này, mà
-       QAT (finetune=True) bắt buộc phải có, thiếu sẽ AssertionError.
+    QAT (finetune=True) bắt buộc phải có, thiếu sẽ AssertionError.
     """
     from ultralytics.nn.tasks import DetectionModel
     from ultralytics.nn.tasks_pruned import DetectionModelPruned

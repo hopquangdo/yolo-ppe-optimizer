@@ -1,15 +1,21 @@
 import numpy as np
 import pytest
-
 from ppe_runtime.engine import create_engine, resolve_backend
 from ppe_runtime.engine.synthetic import SyntheticDetector
 from ppe_runtime.utils.config import EngineConfig
 from ppe_runtime.utils.geometry import letterbox, nms, unletterbox
 
 
-@pytest.mark.parametrize(("weights", "backend"), [
-    ("a.pt", "pytorch"), ("a.onnx", "onnx"), ("a.engine", "tensorrt"), ("a.plan", "tensorrt"), (None, "synthetic"),
-])
+@pytest.mark.parametrize(
+    ("weights", "backend"),
+    [
+        ("a.pt", "pytorch"),
+        ("a.onnx", "onnx"),
+        ("a.engine", "tensorrt"),
+        ("a.plan", "tensorrt"),
+        (None, "synthetic"),
+    ],
+)
 def test_resolve_backend(weights, backend):
     assert resolve_backend(EngineConfig(weights=weights)) == backend
 

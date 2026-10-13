@@ -9,7 +9,8 @@ chúng được lưu dưới một key ``ModuleDict`` riêng để dễ strip kh
 from __future__ import annotations
 
 import torch
-import torch.nn as nn
+from torch import nn
+
 
 class FeatureAdapter(nn.Module):
     """Conv1x1 + BN ánh xạ channel feature của student sang channel feature của teacher."""
@@ -32,9 +33,8 @@ def build_adapters(
 ) -> nn.ModuleDict:
     """Build mỗi layer một adapter bằng cách chạy forward pass giả để đọc shape thật.
 
-    ``layer_names`` phải là key hợp lệ trong ``named_modules()`` của cả student và
-    teacher (đúng với mọi cặp scale/bản pruned YOLO26 dùng chung layout yaml —
-    xem PLAN.md mục 3).
+    ``layer_names`` phải là key hợp lệ trong ``named_modules()`` của cả student và teacher (đúng với mọi cặp scale/bản
+    pruned YOLO26 dùng chung layout yaml — xem PLAN.md mục 3).
     """
     from ultralytics.utils.distill_utils import register_feature_hooks, remove_hooks
 

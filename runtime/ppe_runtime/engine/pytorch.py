@@ -17,8 +17,14 @@ class PyTorchDetector(Detector):
         from ultralytics import YOLO
 
         self._model = YOLO(cfg.weights, task="detect")
-        self._kwargs = dict(conf=cfg.conf, iou=cfg.iou, imgsz=cfg.imgsz, device=cfg.device, half=cfg.half,
-                            verbose=False)
+        self._kwargs = {
+            "conf": cfg.conf,
+            "iou": cfg.iou,
+            "imgsz": cfg.imgsz,
+            "device": cfg.device,
+            "half": cfg.half,
+            "verbose": False,
+        }
         self.set_names(dict(self._model.names))
 
     def predict(self, image: np.ndarray) -> list[Detection]:

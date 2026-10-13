@@ -10,8 +10,8 @@ RUNTIME_DIR = Path(__file__).resolve().parents[1]
 REPO_DIR = RUNTIME_DIR.parent
 sys.path.insert(0, str(RUNTIME_DIR))  # run tests without installing the package
 
-from ppe_runtime.pipeline.types import Detection  # noqa: E402
-from ppe_runtime.utils.config import RulesConfig  # noqa: E402
+from ppe_runtime.pipeline.types import Detection
+from ppe_runtime.utils.config import RulesConfig
 
 WEIGHTS = REPO_DIR / "weights" / "yolo26n.pt"
 

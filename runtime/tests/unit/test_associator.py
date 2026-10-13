@@ -1,5 +1,4 @@
 from conftest import det
-
 from ppe_runtime.ppe import Associator
 from ppe_runtime.utils.config import AssociationConfig
 
@@ -33,8 +32,12 @@ def test_item_outside_every_person_is_ignored(rules):
 
 
 def test_negative_class_flags_item_even_if_worn(rules):
-    dets = [det("person", (0, 0, 100, 200)), det("helmet", (30, 0, 70, 30)), det("vest", (10, 60, 90, 130)),
-            det("no_helmet", (30, 0, 70, 30))]
+    dets = [
+        det("person", (0, 0, 100, 200)),
+        det("helmet", (30, 0, 70, 30)),
+        det("vest", (10, 60, 90, 130)),
+        det("no_helmet", (30, 0, 70, 30)),
+    ]
     [status] = Associator(rules).associate(dets)
     assert status.missing == {"helmet"}
 

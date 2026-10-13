@@ -6,7 +6,7 @@ import contextlib
 from copy import deepcopy
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.nn.modules.block_pruned import (
     C2PSAPruned,
@@ -15,7 +15,7 @@ from ultralytics.nn.modules.block_pruned import (
     C3k2Pruned,
     SPPFPruned,
 )
-from ultralytics.nn.modules.conv import Conv, Concat
+from ultralytics.nn.modules.conv import Concat, Conv
 from ultralytics.nn.modules.head_pruned import DetectPruned
 from ultralytics.nn.tasks import BaseModel
 from ultralytics.utils import LOGGER, colorstr
@@ -132,7 +132,7 @@ def parse_model_pruned(maskbndict, d, ch, verbose=True):
     if scales:
         scale = d.get("scale")
         if not scale:
-            scale = tuple(scales.keys())[0]
+            scale = next(iter(scales.keys()))
             LOGGER.warning(f"WARNING no model scale passed. Assuming scale='{scale}'.")
         depth, width, max_channels = scales[scale]
     else:
@@ -152,11 +152,7 @@ def parse_model_pruned(maskbndict, d, ch, verbose=True):
     prev_bn_layer_name = None
 
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):
-        m = (
-            getattr(torch.nn, m[3:])
-            if "nn." in m
-            else globals()[m]
-        ) if isinstance(m, str) else m
+        m = (getattr(torch.nn, m[3:]) if "nn." in m else globals()[m]) if isinstance(m, str) else m
         for j, a in enumerate(args):
             if isinstance(a, str):
                 with contextlib.suppress(ValueError):
@@ -178,21 +174,27 @@ def parse_model_pruned(maskbndict, d, ch, verbose=True):
             idx_to_bn_layer_name[i] = bn_layer_name
 
         elif m in [C3k2Pruned]:
-            c1, args, c2, links = _parse_c3k2_bottleneck(maskbndict, base_name, n, ch, f, args, i, idx_to_bn_layer_name, prev_bn_layer_name, prev_module)
+            c1, args, c2, links = _parse_c3k2_bottleneck(
+                maskbndict, base_name, n, ch, f, args, i, idx_to_bn_layer_name, prev_bn_layer_name, prev_module
+            )
             current_to_prev.update(links["current_to_prev"])
             prev_bn_layer_name = links["prev_bn"]
             idx_to_bn_layer_name[i] = links["idx_bn"]
             n = 1
 
         elif m in [C3k2C3kPruned]:
-            c1, args, c2, links = _parse_c3k2_c3k(maskbndict, base_name, n, ch, f, args, i, idx_to_bn_layer_name, prev_bn_layer_name, prev_module)
+            c1, args, c2, links = _parse_c3k2_c3k(
+                maskbndict, base_name, n, ch, f, args, i, idx_to_bn_layer_name, prev_bn_layer_name, prev_module
+            )
             current_to_prev.update(links["current_to_prev"])
             prev_bn_layer_name = links["prev_bn"]
             idx_to_bn_layer_name[i] = links["idx_bn"]
             n = 1
 
         elif m in [C3k2AttnPruned]:
-            c1, args, c2, links = _parse_c3k2_attn(maskbndict, base_name, n, ch, f, args, i, idx_to_bn_layer_name, prev_bn_layer_name, prev_module)
+            c1, args, c2, links = _parse_c3k2_attn(
+                maskbndict, base_name, n, ch, f, args, i, idx_to_bn_layer_name, prev_bn_layer_name, prev_module
+            )
             current_to_prev.update(links["current_to_prev"])
             prev_bn_layer_name = links["prev_bn"]
             idx_to_bn_layer_name[i] = links["idx_bn"]
@@ -204,7 +206,10 @@ def parse_model_pruned(maskbndict, d, ch, verbose=True):
             cv2_bn = base_name + ".cv2.bn"
             cv1_mask = maskbndict[cv1_bn]
             cv1out = _mask_sum(maskbndict, cv1_bn)
-            cv1_split = [torch.sum(cv1_mask.chunk(2, 0)[0]).int().item(), torch.sum(cv1_mask.chunk(2, 0)[1]).int().item()]
+            cv1_split = [
+                torch.sum(cv1_mask.chunk(2, 0)[0]).int().item(),
+                torch.sum(cv1_mask.chunk(2, 0)[1]).int().item(),
+            ]
             psa_ffn_cv1outs, psa_ffn_cv2outs = [], []
             for pi in range(n):
                 ffn0_bn = base_name + f".m.{pi}.ffn.0.bn"
@@ -308,7 +313,7 @@ def parse_model_pruned(maskbndict, d, ch, verbose=True):
         m_.np = sum(x.numel() for x in m_.parameters())
         m_.i, m_.f, m_.type = i, f, t
         if verbose:
-            LOGGER.info(f"{i:>3}{str(f):>20}{n_:>3}{m_.np:10.0f}  {t:<50}{str(args):<30}")
+            LOGGER.info(f"{i:>3}{f!s:>20}{n_:>3}{m_.np:10.0f}  {t:<50}{args!s:<30}")
         save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)
         layers.append(m_)
         if i == 0:
@@ -405,16 +410,38 @@ def _parse_c3k2_attn(maskbndict, base_name, n, ch, f, args, i, idx_to_bn, prev_b
     # `shortcut` for any C3k2 variant, so it is always the class default True.
     shortcut = True
     e = args[2] if len(args) > 2 else 0.5
-    attn = args[3] if len(args) > 3 else True
+    args[3] if len(args) > 3 else True
     # num_heads must match original C3k2's attn branch: max(self.c // 64, 1)
     # (block.py: PSABlock(self.c, attn_ratio=0.5, num_heads=max(self.c // 64, 1))).
     # self.c == cv1_split[1] (see C3k2AttnPruned.__init__). Hardcoding this to 1 silently
     # changes the multi-head attention split and corrupts the block's output.
     num_heads = max(cv1_split[1] // 64, 1)
-    out_args = [cv1in, cv1out, cv1_split, inner_cv1out, inner_cv2out, psa_ffn_cv1out, psa_ffn_cv2out, cv2out, n, shortcut, 1, e, 0.5, num_heads]
+    out_args = [
+        cv1in,
+        cv1out,
+        cv1_split,
+        inner_cv1out,
+        inner_cv2out,
+        psa_ffn_cv1out,
+        psa_ffn_cv2out,
+        cv2out,
+        n,
+        shortcut,
+        1,
+        e,
+        0.5,
+        num_heads,
+    ]
     # cv2 input = cat(cv1_split_0, cv1_split_1, sequential_output)
     # Sequential(Bottleneck, PSABlock) output = b0_cv2 channels (PSABlock shortcut preserves)
-    current_to_prev = {cv1_bn: prev_bn, b0_cv1: cv1_bn, b0_cv2: b0_cv1, ffn0: b0_cv2, ffn1: ffn0, cv2_bn: [cv1_bn, b0_cv2]}
+    current_to_prev = {
+        cv1_bn: prev_bn,
+        b0_cv1: cv1_bn,
+        b0_cv2: b0_cv1,
+        ffn0: b0_cv2,
+        ffn1: ffn0,
+        cv2_bn: [cv1_bn, b0_cv2],
+    }
     return cv1in, out_args, cv2out, {"current_to_prev": current_to_prev, "prev_bn": cv2_bn, "idx_bn": cv2_bn}
 
 

@@ -11,8 +11,8 @@ from ppe_runtime.utils.geometry import Box, center_inside, iou, overlap_fraction
 class Associator:
     """Each item goes to the single person it matches best; a person then lacks every required item not assigned.
 
-    Methods: `overlap` (share of the item box inside the person box — robust for small items like helmets),
-    `iou`, or `center` (item center inside person box; ties broken by overlap).
+    Methods: `overlap` (share of the item box inside the person box — robust for small items like helmets), `iou`, or
+    `center` (item center inside person box; ties broken by overlap).
     """
 
     def __init__(self, rules: RulesConfig) -> None:
@@ -60,6 +60,5 @@ class Associator:
             else:
                 flagged[best].add(negative)
         return [
-            PersonStatus(p, frozenset(w), frozenset((self.required - w) | f))
-            for p, w, f in zip(persons, worn, flagged)
+            PersonStatus(p, frozenset(w), frozenset((self.required - w) | f)) for p, w, f in zip(persons, worn, flagged)
         ]

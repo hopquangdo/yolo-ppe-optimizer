@@ -3,4 +3,4 @@ backend: onnx
 imgsz: 640
 conf: 0.25
 iou: 0.7
-providers: [CUDAExecutionProvider, CPUExecutionProvider]   # first available wins
+providers: [CUDAExecutionProvider, CPUExecutionProvider] # first available wins

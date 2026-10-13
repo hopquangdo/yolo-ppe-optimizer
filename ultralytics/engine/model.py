@@ -787,9 +787,7 @@ class Model(torch.nn.Module):
             if isinstance(pretrained, (str, Path)):
                 weights, _ = load_checkpoint(pretrained)
             maskbndict = self.ckpt.get("maskbndict", None) if self.ckpt else None
-            self.trainer.model = self.trainer.get_model(
-                weights=weights, cfg=self.model.yaml, maskbndict=maskbndict
-            )
+            self.trainer.model = self.trainer.get_model(weights=weights, cfg=self.model.yaml, maskbndict=maskbndict)
             self.model = self.trainer.model
 
         self.trainer.train()
@@ -1020,7 +1018,7 @@ class Model(torch.nn.Module):
             >>> model.reset_callbacks()
             # All callbacks are now reset to their default functions
         """
-        for event in callbacks.default_callbacks.keys():
+        for event in callbacks.default_callbacks:
             self.callbacks[event] = [callbacks.default_callbacks[event][0]]
 
     @staticmethod
